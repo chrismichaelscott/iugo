@@ -114,7 +114,6 @@ $iugo.$internals.registerArray = function(arr, mvvc, path) {
 	}
 	arr.sort = function() {
 		var retVal = Array.prototype.sort.apply(this, arguments);
-		mvvc[path[0]] = mvvc[path[0]];
 		return retVal;
 	}
 	arr.splice = function() {
