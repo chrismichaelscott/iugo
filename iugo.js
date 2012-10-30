@@ -117,9 +117,23 @@ $iugo.$internals.registerArray = function(arr, mvvc, path) {
 		return retVal;
 	}
 	arr.splice = function() {
-		var retVal = Array.prototype.splice.apply(this, arguments);
+		// It is essencial to clone the array or the getters will be out of sync as the splice is executed
+		var holdingArray = $iugo.$internals.clone(this);
+		var index = 0;
+		for (; index < holdingArray.length, index < arguments[0]; index++) {
+			this[index] = holdingArray[index];
+		}
+		for (var x = 2; x < arguments.length; x++) {
+			this[index++] = arguments[x];
+		}
+		for (var x = (arguments[0] + arguments[1]); x < holdingArray.length; x++) {
+			this[index++] = holdingArray[x];
+		}
+		for (var x = index; x < holdingArray.length; x++) {
+			delete this[x];
+		}
 		mvvc[path[0]] = mvvc[path[0]];
-		return retVal;
+		return this;
 	}
 };
 /**
