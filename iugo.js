@@ -86,9 +86,17 @@ $iugo.$internals.registerArray = function(arr, mvvc, path) {
 		return retVal;
 	}
 	arr.unshift = function() {
-		var retVal = Array.prototype.unshift.apply(this, arguments);
+		// It is essencial to clone the array, otherwise - as the getter is used - the n+1 index is always set to n
+		var holdingArray = $iugo.$internals.clone(this);
+		var index = 0;
+		for (; index < arguments.length; index++) {
+			this[index] = arguments[index];
+		}
+		for (var x = 0; x < holdingArray.length; x++) {
+			this[index++] = holdingArray[x];
+		}
 		mvvc[path[0]] = mvvc[path[0]];
-		return retVal;
+		return this.length;
 	}
 	arr.shift = function() {
 		// The return value must be cloned or it will be linked to arr[0] - which will change after the shift
@@ -120,7 +128,12 @@ $iugo.$internals.registerArray = function(arr, mvvc, path) {
  * There are multiple cases where using an object by reference causes infinite recursion due to the setters
  */
 $iugo.$internals.clone = function(obj) {
-	var clone = {};
+	var clone;
+	if (obj instanceof Array) {
+		clone = [];
+	} else {
+		clone = {};
+	}
 	for (var i in obj) {
 		if(obj[i] instanceof Object || obj[i] instanceof Array)
 			clone[i] = $iugo.$internals.clone(obj[i]);
