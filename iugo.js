@@ -43,6 +43,9 @@ $iugo.$internals.registerProperty = function(obj, field, mvvc, path) {
 	mvvc.$[path.concat([field]).join('.')] = obj[field];
 	obj.__defineSetter__(field, function(value) {
 		mvvc.$[path.concat([field]).join('.')] = value;
+		// Recurse children and set them too
+		$iugo.$internals.setChildMembers(obj, mvvc, path);
+		
 		// as the setter is already defined we can just update the view
 		// as opposed to pushing to an array where a reset of the model member is required
 		// NB. if this were a full update (mvvc[path[0]] = mvvc[path[0]]) an infinite loop would be generated when pushing to an array
@@ -51,6 +54,18 @@ $iugo.$internals.registerProperty = function(obj, field, mvvc, path) {
 	obj.__defineGetter__(field, function() {
 		return mvvc.$[path.concat([field]).join('.')];
 	})
+};
+/**
+ *
+ */
+$iugo.$internals.setChildMembers = function(obj, mvvc, path) {
+	if (obj instanceof Object || obj instanceof Array) {
+		for (var x in obj) {
+			var newPath = path.concat([x]);
+			mvvc.$[newPath.join('.')] = obj[x];
+			$iugo.$internals.setChildMembers(obj[x], mvvc, newPath);
+		}
+	}
 };
 /**
  * The array itself already has a setter (so changing it for another array will update the view)
@@ -80,6 +95,14 @@ $iugo.$internals.registerArray = function(arr, mvvc, path) {
 		var retVal = $iugo.$internals.clone(Array.prototype.shift.call(this));
 		mvvc[path[0]] = mvvc[path[0]];
 		return retVal;
+	}
+	arr.reverse = function() {
+		// It is essencial to clone the array, otherwise - as the getter is used - the reverse process for length 3 takes arr[2] and puts it in arr[0], leaves arr[1], then moves arr[2] (by pointer from arr[0]) back onto arr[2]
+		var holdingArray = $iugo.$internals.clone(this);
+		for (var x = 0; x < this.length; x++) {
+			this[x] = holdingArray[this.length - 1 - x];
+		}
+		return this;
 	}
 	arr.sort = function() {
 		var retVal = Array.prototype.sort.apply(this, arguments);
