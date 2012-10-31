@@ -130,7 +130,7 @@ $iugo.$internals.registerArray = function(arr, mvvc, path) {
 			this[index++] = holdingArray[x];
 		}
 		for (var x = index; x < holdingArray.length; x++) {
-			delete this[x];
+			this.pop();
 		}
 		mvvc[path[0]] = mvvc[path[0]];
 		return this;
