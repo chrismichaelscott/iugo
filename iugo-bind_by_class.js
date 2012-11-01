@@ -14,7 +14,14 @@ $iugo.$internals.MVVC.prototype.defaultViewcontrollers.push(function(property, v
 				} else {
 					continue;
 				}
-			
+				
+				if (value.length == 0) {
+					elementView.setAttribute("data-iugo_display", elementView.style.display);
+					elementView.style.display = "none";
+				} else {
+					elementView.style.display = elementView.getAttribute("data-iugo_display");
+				}
+				
 				for (var y = 0; y < value.length; y++) {
 					if (y >= 1) {
 						elementView = elementView.cloneNode(true);
