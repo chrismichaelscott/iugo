@@ -1,6 +1,10 @@
+/**
+ * Author Chris Scott <chris.scott@factmint.com>
+ * Delivered with and licensed under the MIT licence
+ */
 // This initializer swaps ${var} for <spans> with attributes for use with the VC below
 $iugo.$internals.MVVC.prototype.initializers.push(function(view) {
-	view.innerHTML = view.innerHTML.replace(/\$\{([^.}]+)\.?([^}]*)\}/g, '<span class="bindto-$1" data-bind_attribute="$2"></span>');
+	view.innerHTML = view.innerHTML.replace(/\$\{([^.}]+)\.?([^}]*)\}/g, '<span class="bindto-$1" data-bind_key="$2"></span>');
 });
 // This VC binds values to the DOM tree, when a class "bindto-property" is applied
 $iugo.$internals.MVVC.prototype.defaultViewcontrollers.push(function(property, value, view, path) {
@@ -32,7 +36,7 @@ $iugo.$internals.MVVC.prototype.defaultViewcontrollers.push(function(property, v
 				}
 			}
 		} else if (value instanceof Object) {
-			var attribute = view.getAttribute('data-bind_attribute');
+			var attribute = view.getAttribute('data-bind_key');
 			if (attribute != null && attribute != "") {
 				if (path == null) {
 					path = "";

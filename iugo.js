@@ -1,3 +1,7 @@
+/**
+ * Author Chris Scott <chris.scott@factmint.com>
+ * Delivered with and licensed under the MIT licence
+ */
 window['$iugo'] = {};
 $iugo.$internals = {};
 /** Apply top level getter and setter to each member of the model
