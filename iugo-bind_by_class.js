@@ -4,7 +4,11 @@
  */
 // This initializer swaps ${var} for <spans> with attributes for use with the VC below
 $iugo.$internals.MVVC.prototype.initializers.push(function(view) {
-	view.innerHTML = view.innerHTML.replace(/(>[^><]*)\$\{([^.}]+)\.?([^}]*)\}([^><]*<)/g, '$1<span class="bindto-$2" data-bind_key="$3"></span>$4');
+	var regex = /(>[^<$]*)\$\{([^.}<]+)\.?([^}<]*)\}([^<]*<)/g;
+	while (view.innerHTML.match(regex)) {
+		view.innerHTML = view.innerHTML.replace(regex, '$1<span class="bindto-$2" data-bind_key="$3"></span>$4');
+	}
+	// This regex may be useable as an attribute replacement - this is currently not supported by the default view-controller and is possibly counter to the lightweight approach of this MVVC environment.
 	//view.innerHTML = view.innerHTML.replace(/(<[^><]*) ([^ =]+)="\$\{([^.}]+)\.?([^}]*)\}"([^><]*>)/g, '$1 data-iugo_bind_attribute_name="$2" data-iugo_bind_attribute_value="$3" data-iugo_bind_attribute_path="$4" $5');
 });
 // This VC binds values to the DOM tree, when a class "bindto-property" is applied
