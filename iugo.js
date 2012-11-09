@@ -191,13 +191,13 @@ $iugo.$internals.MVVC.prototype = {
     },
     // Trigger the view to update
     updateView: function(prop, value) {
-		if (typeof(this.viewcontroller[prop]) !== 'undefined' && this.viewcontroller[prop] instanceof Function) {
-			this.viewcontroller[prop](value);
-		}
 		for (var x = 0; x < this.defaultViewcontrollers.length; x++) {
 			if (this.defaultViewcontrollers[x] instanceof Function) {
 				this.defaultViewcontrollers[x](prop, value, this.view);
 			}
+		}
+		if (typeof(this.viewcontroller[prop]) !== 'undefined' && this.viewcontroller[prop] instanceof Function) {
+			this.viewcontroller[prop](value, this.view);
 		}
     },
     // The deafultViewcontrollers and initializers are added as plugins
