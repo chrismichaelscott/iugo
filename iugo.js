@@ -117,8 +117,13 @@ $iugo.$internals.registerArray = function(arr, mvvc, path) {
 		return this;
 	}
 	arr.sort = function() {
-		var retVal = Array.prototype.sort.apply(this, arguments);
-		return retVal;
+		// It is essencial to clone the array, otherwise - as the getter is used - setting an index "n" alters the value of "n-1"
+		var holdingArray = $iugo.$internals.clone(this);
+		Array.prototype.sort.apply(holdingArray, arguments);
+		for (var x = 0; x < this.length; x++) {
+			this[x] = holdingArray[x];
+		}
+		return this;
 	}
 	arr.splice = function() {
 		// It is essencial to clone the array or the getters will be out of sync as the splice is executed
