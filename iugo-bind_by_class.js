@@ -13,14 +13,26 @@ $iugo.$internals.MVVC.prototype.initializers.push(function(view) {
 });
 // This VC binds values to the DOM tree, when a class "bindto-property" is applied
 $iugo.$internals.MVVC.prototype.defaultViewcontrollers.push(function(property, value, view, path) {
+	var attributeRegex = /\$\{([^}]+)\}/g;
+	
 	function process(value, view, path) {
 		if (view.hasAttribute('data-bind_attribute')) {
-			var source = view.getAttribute('data-bind_attribute_to').split('.');
-			var workingValue = value;
-			for (var x = 0; x < source.length; x++) {
-				workingValue = workingValue[source[x]];
+			var attribute = view.getAttribute('data-bind_attribute');
+			
+			if (!view.hasAttribute('data-iugo_original_' + attribute)) {
+				view.setAttribute('data-iugo_original_' + attribute, view.getAttribute(attribute));
 			}
-			view.setAttribute(view.getAttribute('data-bind_attribute'), workingValue);
+			
+			var template = view.getAttribute('data-iugo_original_' + attribute);
+			var compiledAttribute = template.replace(attributeRegex, function(match, address) {			
+				var source = address.split('.');
+				var workingValue = value;
+				for (var x = 0; x < source.length; x++) {
+					workingValue = workingValue[source[x]];
+				}
+				return workingValue;
+			});
+			view.setAttribute(attribute, compiledAttribute);
 		}
 		if (value instanceof Array) {
 			var numberOfChildren = view.children.length;
