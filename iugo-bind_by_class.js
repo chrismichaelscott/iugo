@@ -17,22 +17,24 @@ $iugo.$internals.MVVC.prototype.defaultViewcontrollers.push(function(property, v
 	
 	function process(value, view, path) {
 		if (view.hasAttribute('data-bind_attribute')) {
-			var attribute = view.getAttribute('data-bind_attribute');
-			
-			if (!view.hasAttribute('data-iugo_original_' + attribute)) {
-				view.setAttribute('data-iugo_original_' + attribute, view.getAttribute(attribute));
-			}
-			
-			var template = view.getAttribute('data-iugo_original_' + attribute);
-			var compiledAttribute = template.replace(attributeRegex, function(match, address) {			
-				var source = address.split('.');
-				var workingValue = value;
-				for (var x = 0; x < source.length; x++) {
-					workingValue = workingValue[source[x]];
+			var attributes = view.getAttribute('data-bind_attribute').split(" ");
+			for (var x = 0; x < attributes.length; x++) {
+				var attribute = attributes[x];
+				if (!view.hasAttribute('data-iugo_original_' + attribute)) {
+					view.setAttribute('data-iugo_original_' + attribute, view.getAttribute(attribute));
 				}
-				return workingValue;
-			});
-			view.setAttribute(attribute, compiledAttribute);
+				
+				var template = view.getAttribute('data-iugo_original_' + attribute);
+				var compiledAttribute = template.replace(attributeRegex, function(match, address) {			
+					var source = address.split('.');
+					var workingValue = value;
+					for (var x = 0; x < source.length; x++) {
+						workingValue = workingValue[source[x]];
+					}
+					return workingValue;
+				});
+				view.setAttribute(attribute, compiledAttribute);
+			}
 		}
 		if (value instanceof Array) {
 			var numberOfChildren = view.children.length;
