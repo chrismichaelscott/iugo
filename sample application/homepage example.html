@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<script src="../iugo-mvvc.min.js"></script>
+<script>
+window.onload = function() {
+var model = new Iugo({
+    isbn: "",
+    title: "",
+    description: "",
+    author: {
+        firstname: "",
+        surname: ""
+    }
+});
+
+// Set some value - this could be via an API (as per home page example)
+model.title = "20 Thousand Leagues Under The Sea";
+model.description = "It's about a submarine";
+model.author.firstname = "Jules";
+model.author.surname = "Verne";
+};
+</script>
+
+</head>
+<body>
+	<div>
+    <span class="bindto-title"></span>
+    <p>by ${author.firstname} ${author.surname}</p>
+    <p class="bindto-description"></p>
+</div>
+</body>
+</html>
