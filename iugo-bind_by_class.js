@@ -4,7 +4,7 @@
  */
 // This initializer swaps ${var} for <spans> with attributes for use with the VC below
 $iugo.$internals.MVVC.prototype.initializers.push(function(view) {
-	var regex = /(>[^<$]*)\$\{([^.}<]+:)?([^}<]*)\}([^<]*<)/g;
+	var regex = /(>[^<$]*)\$\{([^:.}<]+:)?([^}<]*)\}([^<]*<)/g;
 	while (view.innerHTML.match(regex)) {
 		view.innerHTML = view.innerHTML.replace(regex, function(m, before, namespace, address, after) {
 			var replacement = before + '<span ';
