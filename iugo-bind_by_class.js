@@ -4,12 +4,18 @@
  */
 // This initializer swaps ${var} for <spans> with attributes for use with the VC below
 $iugo.$internals.MVVC.prototype.initializers.push(function(view) {
-	var regex = /(>[^<$]*)\$\{([^.}<]+)\.?([^}<]*)\}([^<]*<)/g;
+	var regex = /(>[^<$]*)\$\{([^.}<]+:)?([^}<]*)\}([^<]*<)/g;
 	while (view.innerHTML.match(regex)) {
-		view.innerHTML = view.innerHTML.replace(regex, '$1<span class="bindto-$2" data-bind_key="$3"></span>$4');
+		view.innerHTML = view.innerHTML.replace(regex, function(m, before, namespace, address, after) {
+			var replacement = before + '<span ';
+			if (namespace) {
+				replacement += 'class="bindto-' + namespace.substr(0, (namespace.length - 1)) + '" ';
+			}
+			replacement += 'data-bind_key="' + address + '"></span>' + after;
+			
+			return replacement;
+		});
 	}
-	// This regex may be useable as an attribute replacement - this is currently not supported by the default view-controller and is possibly counter to the lightweight approach of this MVVC environment.
-	//view.innerHTML = view.innerHTML.replace(/(<[^><]*) ([^ =]+)="\$\{([^.}]+)\.?([^}]*)\}"([^><]*>)/g, '$1 data-iugo_bind_attribute_name="$2" data-iugo_bind_attribute_value="$3" data-iugo_bind_attribute_path="$4" $5');
 });
 // This VC binds values to the DOM tree, when a class "bindto-property" is applied
 $iugo.$internals.MVVC.prototype.defaultViewcontrollers.push(function(property, value, view, path) {
@@ -54,12 +60,15 @@ $iugo.$internals.MVVC.prototype.defaultViewcontrollers.push(function(property, v
 				}
 				
 				for (var y = 0; y < value.length; y++) {
+					var duplicateElement;
 					if (y >= 1) {
-						elementView = elementView.cloneNode(true);
-						elementView.className = elementView.className + " iugo_cloned";
-						view.appendChild(elementView);
+						duplicateElement = elementView.cloneNode(true);
+						duplicateElement.className = elementView.className + " iugo_cloned";
+						view.appendChild(duplicateElement);
+					} else {
+						duplicateElement = elementView;
 					}
-					process(value[y], elementView);
+					process(value[y], duplicateElement);
 				}
 			}
 		} else if (value instanceof Object) {
@@ -75,7 +84,11 @@ $iugo.$internals.MVVC.prototype.defaultViewcontrollers.push(function(property, v
 				process(value[nextPath], view, path + nextPath);
 			}
 			for (var x = 0; x < view.children.length; x++) {
-				process(value, view.children[x], path);
+				// it is possible to use a bindto-XXX class in a sub-element of an already bound element
+				// in that case we want to skip the DOM descent from the parent and wait until the child has its own binding iteration
+				if (! view.children[x].className.match("bindto-")) {
+					process(value, view.children[x], path);
+				}
 			}
 		} else {
 			if (view.tagName == "INPUT") {
