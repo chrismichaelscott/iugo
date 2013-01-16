@@ -44,6 +44,12 @@ $iugo.$internals.MVVC.prototype.defaultViewcontrollers.push(function(property, v
 		}
 		if (value instanceof Array) {
 			var numberOfChildren = view.children.length;
+			for (var x = numberOfChildren - 1; x >= 0; x--) {
+				if (view.children[x].classList.contains('iugo_cloned')) {
+					view.removeChild(view.children[x]);
+				}
+			}
+			numberOfChildren = view.children.length;
 			for (var x = 0; x < numberOfChildren; x++) {
 				var elementView;
 				if (view.children[x].hasAttribute('data-bind_each')) {
@@ -63,7 +69,7 @@ $iugo.$internals.MVVC.prototype.defaultViewcontrollers.push(function(property, v
 					var duplicateElement;
 					if (y >= 1) {
 						duplicateElement = elementView.cloneNode(true);
-						duplicateElement.className = elementView.className + " iugo_cloned";
+						duplicateElement.classList.add("iugo_cloned");
 						view.appendChild(duplicateElement);
 					} else {
 						duplicateElement = elementView;
@@ -101,13 +107,6 @@ $iugo.$internals.MVVC.prototype.defaultViewcontrollers.push(function(property, v
 	
 	var elements = view.getElementsByClassName("bindto-" + property);
 	for (var x = 0; x < elements.length; x++ ) {
-		var clones = elements[x].getElementsByClassName("iugo_cloned");
-		// Move the count to a primitive as we are removing from the array itself!
-		var numberOfClones = clones.length;
-		for (var y = 0; y < numberOfClones; y++) {
-			// Likewise, always remove the first element - as in an unset
-			clones[0].parentNode.removeChild(clones[0]);
-		}
 		process(value, elements[x]);
 	}
 });
