@@ -1,4 +1,9 @@
+/sample application/todo.html
 
 fm.html
+
+/tests/*~
+
+*~
 
 .DS_Store
