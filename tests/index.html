@@ -24,6 +24,7 @@ window.onload = function() {
 			}
 		},
 		work: {
+			name: "FactMint",
 			telephone: "911",
 			address: {
 				city: "New York"
@@ -125,22 +126,31 @@ window.onload = function() {
 	});
 	
 	test('Attribute Binding Test', function() {
-		var city = document.getElementById('attributeBindTest');
-		equal(city.getAttribute("data-iugo_original_data-country"), "${address.country}", "The original variable is stored");
-		equal(city.getAttribute("data-country"), "UK", "The value is used to populate the attribute");
+		var country = document.getElementById('attributeBindTest').getAttribute('data-country');
+		equal(country, "UK", "A variable in an attribute has been substituted for the value in the model");
 		
-		var pic = document.getElementById('attributeInjectMemberTest');
-		equal(pic.getAttribute("src"), "images/country/UK", "The value is injected into the attribute in the place of a variable");
+		var country2 = document.getElementById('attributeBindNamespaceTest').getAttribute('data-country');
+		equal(country2, "UK", "A namespaced variable in an attribute has been substit for the value in the model");
 		
-		testCase.contact.address.country = "England";
-		equal(city.getAttribute("data-country"), "England", "Changes to the model are updated in the attribute");
-		equal(pic.getAttribute("src"), "images/country/England", "Changes to the model are injected into the attribute in the place of a variable");
+		var countryImage = document.getElementById('attributeBindInjectTest').getAttribute('src');
+		equal(countryImage, "images/FactMint", "A value from the model has been injected into an attribute replacing the variable but keeping the surrounding content");
 		
-		var alex = document.getElementById('attributesListTest').children[2].children[0];
-		equal(alex.getAttribute("data-name"), "Alex Parkes", "Attribute bindings work from a list");
+		var location = document.getElementById('attributeMultiBindTest').getAttribute('data-location');
+		equal(location, "UK New York", "Multiple variables are substituted in an attribute");
 		
-		//var workTelephone = document.getElementById('attributeBindNamespaceTest');
-		//equal(workTelephone.getAttribute("data-phone"), "911", "Namespaced variables in attributes are substituted properly");
+		var city = document.getElementById('multiAttributeBindTest').getAttribute('data-city');
+		var work = document.getElementById('multiAttributeBindTest').getAttribute('data-work');
+		ok(city == "London" && work == "FactMint", "Multiple attributes are processed within one tag");
+		
+		// Update the model to check the changes are reflected
+		testCase.work.name = "FactMint Ltd";
+		
+		work = document.getElementById('multiAttributeBindTest').getAttribute('data-work');
+		equal(work, "FactMint Ltd", "Updates to the model are reflected in attributes with variables");
+		
+		countryImage = document.getElementById('attributeBindInjectTest').getAttribute('src');
+		equal(countryImage, "images/FactMint Ltd", "Updates to the model are reflected in attributes with variables and surrounding text");
+		
 	});
 };
 </script>
@@ -174,13 +184,11 @@ window.onload = function() {
 				is ${age} years old
 			</li>
 		</ul>
-		<div class="bindto-contact" data-bind_attribute="data-country" data-country="${address.country}" id="attributeBindTest">
-			<img data-bind_attribute="src" src="images/country/${address.country}" id="attributeInjectMemberTest"></img>
-			<ul class="bindto-friends" id="attributesListTest">
-				<li data-bind_each><p data-bind_attribute="data-name" data-name="${firstname} ${surname}"></p></li>
-			</ul>
-			<div data-bind_attribute="data-phone" data-phone="${work:telephone}" id="attributeBindNamespaceTest"></div>
-		</div>
+		<div class="bindto-contact" data-country="${address.country}" id="attributeBindTest"></div>
+		<div data-country="${contact:address.country}" id="attributeBindNamespaceTest"></div>
+		<img src="images/${work:name}" id="attributeBindInjectTest"></img>
+		<div class="bindto-contact" data-location="${address.country} ${work:address.city}" id="attributeMultiBindTest"></div>
+		<div class="bindto-contact" data-city="${address.city}" data-work="${work:name}" id="multiAttributeBindTest"></div>
 	</div>
 	<h1 id="qunit-header">iugo MVVC test coverage</h1>  
 	<h2 id="qunit-banner"></h2>  

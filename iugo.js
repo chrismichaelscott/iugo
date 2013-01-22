@@ -204,6 +204,7 @@ $iugo.$internals.MVVC.prototype = {
     "defaultViewcontrollers": [],
     "initializers": []
 };
+$iugo.store = {};
 /*
  * This is the "public" view on the framework
  *
