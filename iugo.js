@@ -1,3 +1,9 @@
+// ==ClosureCompiler==
+// @compilation_level SIMPLE_OPTIMIZATIONS
+// @output_file_name default.js
+// @language ECMASCRIPT5
+// ==/ClosureCompiler==
+
 /**
  * Author Chris Scott <chris.scott@factmint.com>
  * Delivered with and licensed under the MIT licence
@@ -204,7 +210,11 @@ $iugo.$internals.MVVC.prototype = {
     "defaultViewcontrollers": [],
     "initializers": []
 };
-$iugo.store = {};
+
+// Make the API available to plugins
+$iugo["defaultViewcontrollers"] = $iugo.$internals.MVVC.prototype.defaultViewcontrollers;
+$iugo["initializers"] = $iugo.$internals.MVVC.prototype.initializers;
+$iugo["store"] = {};
 /*
  * This is the "public" view on the framework
  *

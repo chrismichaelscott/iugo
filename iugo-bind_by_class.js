@@ -1,15 +1,23 @@
+// ==ClosureCompiler==
+// @compilation_level ADVANCED_OPTIMIZATIONS
+// @output_file_name default.js
+// @language ECMASCRIPT5
+// ==/ClosureCompiler==
+
+// Note on minification: the plugin name ("bind_by_class") can be replaced by an abbreviation ("VC"), post compile
+
 /**
  * Author Chris Scott <chris.scott@factmint.com>
  * Delivered with and licensed under the MIT licence
  */
 // Create a metadata store
-$iugo.store.bind_by_class = {
+$iugo['store']['bind_by_class'] = {
 	tags: [],
-	namespaces: {}
+	namespacedTagIndex: {}
 };
 
 // This initializer swaps ${var} for <spans> with attributes for use with the VC below
-$iugo.$internals.MVVC.prototype.initializers.push(function(view) {
+$iugo['initializers'].push(function(view) {
 	var idCounter = 0;
 	
 	var innerHTMLRegex = /(>[^<$]*)\$\{([^:.}<]+:)?([^}<]*)\}([^<]*<)/g;
@@ -31,7 +39,7 @@ $iugo.$internals.MVVC.prototype.initializers.push(function(view) {
 	view.innerHTML = view.innerHTML.replace(tagRegex, function(tag) {
 		var tagId = idCounter++;
 		
-		$iugo.store.bind_by_class.tags[tagId] = {
+		$iugo['store']['bind_by_class'].tags[tagId] = {
 			bindAttributes: [],
 			attributeTemplates: {},
 			replacements: {}
@@ -39,22 +47,22 @@ $iugo.$internals.MVVC.prototype.initializers.push(function(view) {
 		
 		// Look for each attribute that uses a variable syntax...
 		var attributeRegex = /([^ =]+)="([^"]*\$\{[^}"]+\}[^"]*)"/g;
-		var tag = tag.replace(attributeRegex, function(attribute, attributeName, attributeValue) {
+		tag = tag.replace(attributeRegex, function(attribute, attributeName, attributeValue) {
 			// add the attibute name to the bind attibute list (which will be processed at runtime)...
-			$iugo.store.bind_by_class.tags[tagId].bindAttributes.push(attributeName);
+			$iugo['store']['bind_by_class'].tags[tagId].bindAttributes.push(attributeName);
 			// and store the template used as the attibute value
-			$iugo.store.bind_by_class.tags[tagId].attributeTemplates[attributeName] = attributeValue;
+			$iugo['store']['bind_by_class'].tags[tagId].attributeTemplates[attributeName] = attributeValue;
 			
 			// Check whether the value is namespaced
 			var namespaceRegex = /\$\{([^"}:]+):[^}"]+\}/g;
 			attributeValue.replace(namespaceRegex, function(m, namespace) {
 				// Create a metadata store for the property
-				if (!$iugo.store.bind_by_class.namespaces[namespace]) {
-					$iugo.store.bind_by_class.namespaces[namespace] = [];
+				if (!$iugo['store']['bind_by_class'].namespacedTagIndex[namespace]) {
+					$iugo['store']['bind_by_class'].namespacedTagIndex[namespace] = [];
 				}
 				// Record that changes to the namespace will need to recompile this tag
-				if ($iugo.store.bind_by_class.namespaces[namespace].indexOf(tagId) == -1) {
-					$iugo.store.bind_by_class.namespaces[namespace].push(tagId);
+				if ($iugo['store']['bind_by_class'].namespacedTagIndex[namespace].indexOf(tagId) == -1) {
+					$iugo['store']['bind_by_class'].namespacedTagIndex[namespace].push(tagId);
 				}
 			});
 			
@@ -67,20 +75,20 @@ $iugo.$internals.MVVC.prototype.initializers.push(function(view) {
 	});
 });
 // This VC binds values to the DOM tree, when a class "bindto-property" is applied
-$iugo.$internals.MVVC.prototype.defaultViewcontrollers.push(function(property, value, view, path) {
+$iugo['defaultViewcontrollers'].push(function(property, value, view, path) {
 	var attributeRegex = /\$\{([^:}]+:)?([^}]+)\}/g;
 	
 	function compileTagAttributes(tagId) {
 		var tag = document.querySelector('[data-iugo_id="' + tagId + '"]');
 		
-		var attributes = $iugo.store.bind_by_class.tags[tagId].bindAttributes;
+		var attributes = $iugo['store']['bind_by_class'].tags[tagId].bindAttributes;
 		
 		for (var x = 0; x < attributes.length; x++) {
-			var template = $iugo.store.bind_by_class.tags[tagId].attributeTemplates[attributes[x]];
+			var template = $iugo['store']['bind_by_class'].tags[tagId].attributeTemplates[attributes[x]];
 			
 			var compiledAttribute = template.replace(attributeRegex, function(match) {
-				return ($iugo.store.bind_by_class.tags[tagId].replacements[match]) ?
-					$iugo.store.bind_by_class.tags[tagId].replacements[match] :
+				return ($iugo['store']['bind_by_class'].tags[tagId].replacements[match]) ?
+					$iugo['store']['bind_by_class'].tags[tagId].replacements[match] :
 					"";
 			});
 			
@@ -92,20 +100,20 @@ $iugo.$internals.MVVC.prototype.defaultViewcontrollers.push(function(property, v
 		if (view.hasAttribute('data-iugo_id')) {
 			var tagId = view.getAttribute('data-iugo_id');
 			
-			var attributes = $iugo.store.bind_by_class.tags[tagId].bindAttributes;
+			var attributes = $iugo['store']['bind_by_class'].tags[tagId].bindAttributes;
 			for (var x = 0; x < attributes.length; x++) {
 				var attribute = attributes[x];
 				
 				// Add the variables to the store with their latest values
-				var template = $iugo.store.bind_by_class.tags[tagId].attributeTemplates[attribute];
+				var template = $iugo['store']['bind_by_class'].tags[tagId].attributeTemplates[attribute];
 				template.replace(attributeRegex, function(match, namespace, address) {			
 					if ((!namespace && !scope) || (namespace && namespace.substr(0, namespace.length - 1) == scope)) {
 						var source = address.split('.');
-						workingValue = value;
+						var workingValue = value;
 						for (var x = 0; x < source.length; x++) {
 							workingValue = workingValue[source[x]];
 						}
-						$iugo.store.bind_by_class.tags[tagId].replacements[match] = workingValue;
+						$iugo['store']['bind_by_class'].tags[tagId].replacements[match] = workingValue;
 					}
 				});
 				
@@ -190,8 +198,8 @@ $iugo.$internals.MVVC.prototype.defaultViewcontrollers.push(function(property, v
 	}
 	
 	// Look for elements with a generated iugo id for processing
-	if ($iugo.store.bind_by_class.namespaces[property]) {
-		var idList = $iugo.store.bind_by_class.namespaces[property];
+	if ($iugo['store']['bind_by_class'].namespacedTagIndex[property]) {
+		var idList = $iugo['store']['bind_by_class'].namespacedTagIndex[property];
 		for (var x = 0; x < idList.length; x++) {
 			var elements = view.querySelectorAll('[data-iugo_id="' + idList[x] + '"]');
 			
