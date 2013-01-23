@@ -11,6 +11,7 @@
 window.onload = function() {
 	var testCase = new Iugo({
 		email: "chris@factmint.com",
+		name: "Chris Scott",
 		friends: [
 			{firstname: "Euan", surname: "Holloway", age: 29},
 			{firstname: "Josie", surname: "Capell", age: 29},
@@ -71,9 +72,9 @@ window.onload = function() {
 		ok(workTelephone, "Multiple variables are all sumstituted");
 		equal(workTelephone.innerHTML, "911", "The second namespaces variable tag is bound to a member");
 		
-		var email = document.getElementById('variableSyntaxNamespaceOnlyTest').children[0];
-		ok(email, "A variable with a namespace and no address is still bound to a simple variable");
-		equal(email.innerHTML, "chris.scott@factmint.com", "The simple variable is adressed by namespace alone");
+		var name = document.getElementById('variableSyntaxNamespaceOnlyTest').children[0];
+		ok(name, "A variable with a namespace and no address is still bound to a simple variable");
+		equal(name.innerHTML, "Chris Scott", "The simple variable is adressed by namespace alone");
 	});
 	
 	test('Simple List Binding Test', function() {
@@ -170,7 +171,7 @@ window.onload = function() {
 			<span data-bind_key="telephone" id="objectMemberChildElementTest"></span>
 			<span id="variableSyntaxTest">My post code is ${address.postcode}.</span>
 			<span id="variableSyntaxNamespaceTest">In ${work:address.city} the Emergency Serives are on ${work:telephone}</span>
-			<span id="variableSyntaxNamespaceOnlyTest">My email is ${email:}</span>
+			<span id="variableSyntaxNamespaceOnlyTest">My name is ${name:}</span>
 		</div>
 		<ul class="bindto-websites" id="simpleListTest">
 			<li data-bind_each></li>
