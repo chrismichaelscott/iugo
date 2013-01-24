@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<script src="../iugo-mvvc.min.js"></script>
+<script src="../iugo.min.js"></script>
 <script>
 window.onload = function() {
 var model = new Iugo({
@@ -27,7 +27,7 @@ model.author.surname = "Verne";
 <body>
 	<div>
     <span class="bindto-title"></span>
-    <p>by ${author.firstname} ${author.surname}</p>
+    <p>by ${author:firstname} ${author:surname}</p>
     <p class="bindto-description"></p>
 </div>
 </body>
