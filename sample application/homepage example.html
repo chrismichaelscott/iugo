@@ -2,7 +2,8 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<script src="../iugo.min.js"></script>
+<script src="../iugo-core.js"></script>
+<script src="../iugo-bind_to_dom.js"></script>
 <script>
 window.onload = function() {
 var model = new Iugo({
@@ -26,9 +27,9 @@ model.author.surname = "Verne";
 </head>
 <body>
 	<div>
-    <span class="bindto-title"></span>
-    <p>by ${author:firstname} ${author:surname}</p>
-    <p class="bindto-description"></p>
-</div>
+		<p class="bindto-title"></p>
+		<p class="bindto-author">by ${firstname} ${surname}</p>
+		<p class="bindto-description"></p>
+	</div>
 </body>
 </html>

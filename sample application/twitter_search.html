@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<script src="iugo-mvvc.min.js"></script>
+<script src="../iugo.min.js"></script>
 <script src="jquery-1.7.1.min.js"></script>
 <script>
 $(document).ready(function() {
@@ -44,6 +44,12 @@ ul {
 	box-shadow: 1px 3px 6px grey;
 	background-color: white;
 }
+.tweet img {
+	float: left;
+}
+.tweet p {
+	margin: 0 0 8px 60px;
+}
 </style>
 </head>
 <body>
@@ -52,7 +58,8 @@ ul {
 	</form>
 	<ul class="bindto-results">
 		<li data-bind_each class="tweet">
-			<p>Name: <strong data-bind_key="from_user"></strong></p>
+			<img data-iugo_alias-src="${profile_image_url}" />
+			<p>Name: @${from_user}</p>
 			<p data-bind_key="text"></p>
 		</li>
 	</ul>

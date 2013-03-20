@@ -137,6 +137,9 @@ window.onload = function() {
 		var countryImage = document.getElementById('attributeBindInjectTest').getAttribute('src');
 		equal(countryImage, "images/FactMint", "A value from the model has been injected into an attribute replacing the variable but keeping the surrounding content");
 		
+		var countryImage2 = document.getElementById('attributeBindAliasTest').getAttribute('src');
+		equal(countryImage2, "images/FactMint", "A value from the model has been injected into an attribute by an alias");
+		
 		var location = document.getElementById('attributeMultiBindTest').getAttribute('data-location');
 		equal(location, "UK New York", "Multiple variables are substituted in an attribute");
 		
@@ -189,6 +192,7 @@ window.onload = function() {
 		<div class="bindto-contact" data-country="${address.country}" id="attributeBindTest"></div>
 		<div data-country="${contact:address.country}" id="attributeBindNamespaceTest"></div>
 		<img src="images/${work:name}" id="attributeBindInjectTest"></img>
+		<img data-iugo_alias-src="images/${work:name}" id="attributeBindAliasTest"></img>
 		<div class="bindto-contact" data-location="${address.country} ${work:address.city}" id="attributeMultiBindTest"></div>
 		<div class="bindto-contact" data-city="${address.city}" data-work="${work:name}" id="multiAttributeBindTest"></div>
 	</div>

@@ -4,7 +4,10 @@
 // @language ECMASCRIPT5
 // ==/ClosureCompiler==
 
-// Note on minification: the plugin name ("bind_to_dom") can be replaced by an abbreviation ("VC"), post compile
+/** 
+ * Note on minification: 
+ *	the plugin name ("bind_to_dom") can be replaced by an abbreviation ("BD", for example) by find-and-replace, post compile
+ */
 
 /**
  * Author Chris Scott <chris.scott@factmint.com>
@@ -48,6 +51,10 @@ $iugo['initializers'].push(function(view) {
 		// Look for each attribute that uses a variable syntax...
 		var attributeRegex = /([^ =]+)="([^"]*\$\{[^}"]+\}[^"]*)"/g;
 		tag = tag.replace(attributeRegex, function(attribute, attributeName, attributeValue) {
+			// If the attribute name begins with "data-iugo_alias-" then drop that prefix
+			if (attributeName.substr(0, 16) == "data-iugo_alias-") {
+				attributeName = attributeName.substr(16);
+			}
 			// add the attibute name to the bind attibute list (which will be processed at runtime)...
 			$iugo['store']['bind_to_dom'].tags[tagId].bindAttributes.push(attributeName);
 			// and store the template used as the attibute value
