@@ -1,6 +1,6 @@
 # iugo.js
 
-iugo is an extremely lightweight (4KB) Javascript MVVC (Model-View-View Controller) framework, used to bind models to the DOM dynamically.
+iugo is an extremely lightweight (2KB, minified and gzipped) Javascript MVVC (Model-View-View Controller) framework, used to bind models to the DOM dynamically.
 
 ### Why is iugo needed?
 
@@ -47,7 +47,7 @@ Now the HTML is clear and one can see what it will look like before the Javascri
 
 ### Installation
 
-The simplest way to get started is to download the iugo-mvvc.min.js script and include it in your HTML page. If you are using different view-controller plugins from the standard DOM binding then you need to include iugo.min.js and any plugins you want to use. See the wiki for full details.
+The simplest way to get started is to download the iugo.min.js script and include it in your HTML page. If you are using different view-controller plugins from the standard DOM binding then you need to include iugo.min.js and any plugins you want to use. See the wiki for full details.
 
 ### Plugins
 
