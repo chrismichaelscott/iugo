@@ -114,6 +114,7 @@ $iugo.$internals.registerArray = function(arr, mvvc, path) {
 		for (var x = 0; x < this.length; x++) {
 			this[x] = holdingArray[this.length - 1 - x];
 		}
+		mvvc[path[0]] = mvvc[path[0]];
 		return this;
 	}
 	arr.sort = function() {
@@ -123,6 +124,7 @@ $iugo.$internals.registerArray = function(arr, mvvc, path) {
 		for (var x = 0; x < this.length; x++) {
 			this[x] = holdingArray[x];
 		}
+		mvvc[path[0]] = mvvc[path[0]];
 		return this;
 	}
 	arr.splice = function() {
