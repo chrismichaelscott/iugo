@@ -9,16 +9,16 @@ $iugo.$internals = {};
  * The view must be refreshed at this level only as the viewcontrollers may use other parts of the model in calculations
  */
 $iugo.$internals.registerModelMember = function(obj, prop) {
-    Object.defineProperty(obj, prop, {
-        get: function() {
-        	return this.$[prop];
-        },
-        set: function(value) {
-        	this.updateView(prop, value);
+	Object.defineProperty(obj, prop, {
+		get: function() {
+			return this.$[prop];
+		},
+		set: function(value) {
+			this.updateView(prop, value);
 			this.$[prop] = value;
 			$iugo.$internals.applySetters(value, this, [prop], value);
-        }
-    });
+		}
+	});
 };
 /**
  * Apply traverse the model looking for members to apply setters to
@@ -116,6 +116,7 @@ $iugo.$internals.registerArray = function(arr, mvvc, path) {
 		for (var x = 0; x < this.length; x++) {
 			this[x] = holdingArray[this.length - 1 - x];
 		}
+		mvvc[path[0]] = mvvc[path[0]];
 		return this;
 	}
 	arr.sort = function() {
@@ -125,6 +126,7 @@ $iugo.$internals.registerArray = function(arr, mvvc, path) {
 		for (var x = 0; x < this.length; x++) {
 			this[x] = holdingArray[x];
 		}
+		mvvc[path[0]] = mvvc[path[0]];
 		return this;
 	}
 	arr.splice = function() {
@@ -183,16 +185,16 @@ $iugo.$internals.MVVC = function(model, view, viewcontroller) {
 };
 $iugo.$internals.MVVC.prototype = {
 	// The "Dollar" field holds references to all members and sub-members of the model, without any getters or setters
-    "$": {},
-    // Prototypal setter for the top level model. I.E how you define a model
-    set model(model) {
-        for (var member in model) {
-            $iugo.$internals.registerModelMember(this, member);
-            this[member] = model[member];
-        }
-    },
-    // Trigger the view to update
-    updateView: function(prop, value) {
+	"$": {},
+	// Prototypal setter for the top level model. I.E how you define a model
+	set model(model) {
+		for (var member in model) {
+			$iugo.$internals.registerModelMember(this, member);
+			this[member] = model[member];
+		}
+	},
+	// Trigger the view to update
+	updateView: function(prop, value) {
 		for (var x = 0; x < this.defaultViewcontrollers.length; x++) {
 			if (this.defaultViewcontrollers[x] instanceof Function) {
 				this.defaultViewcontrollers[x](prop, value, this.view);
@@ -201,10 +203,10 @@ $iugo.$internals.MVVC.prototype = {
 		if (typeof(this.viewcontroller[prop]) !== 'undefined' && this.viewcontroller[prop] instanceof Function) {
 			this.viewcontroller[prop](value, this.view);
 		}
-    },
-    // The deafultViewcontrollers and initializers are added as plugins
-    "defaultViewcontrollers": [],
-    "initializers": []
+	},
+	// The deafultViewcontrollers and initializers are added as plugins
+	"defaultViewcontrollers": [],
+	"initializers": []
 };
 
 // Make the API available to plugins
