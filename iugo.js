@@ -45,19 +45,21 @@ $iugo.$internals.applySetters = function(obj, mvvc, props, modelMember) {
  */
 $iugo.$internals.registerProperty = function(obj, field, mvvc, path) {
 	mvvc.$[path.concat([field]).join('.')] = obj[field];
-	obj.__defineSetter__(field, function(value) {
-		mvvc.$[path.concat([field]).join('.')] = value;
-		// Recurse children and set them too
-		$iugo.$internals.setChildMembers(obj, mvvc, path);
-		
-		// as the setter is already defined we can just update the view
-		// as opposed to pushing to an array where a reset of the model member is required
-		// NB. if this were a full update (mvvc[path[0]] = mvvc[path[0]]) an infinite loop would be generated when pushing to an array
-		mvvc.updateView(path[0], mvvc[path[0]]);
-	})
-	obj.__defineGetter__(field, function() {
-		return mvvc.$[path.concat([field]).join('.')];
-	})
+	Object.defineProperty(obj, field, {
+        get: function() {
+            return mvvc.$[path.concat([field]).join('.')];
+        },
+        set: function(value) {
+            mvvc.$[path.concat([field]).join('.')] = value;
+            // Recurse children and set them too
+            $iugo.$internals.setChildMembers(obj, mvvc, path);
+            
+            // as the setter is already defined we can just update the view
+            // as opposed to pushing to an array where a reset of the model member is required
+            // NB. if this were a full update (mvvc[path[0]] = mvvc[path[0]]) an infinite loop would be generated when pushing to an array
+            mvvc.updateView(path[0], mvvc[path[0]]);
+        }
+    })
 };
 /**
  *
