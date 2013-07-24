@@ -2,6 +2,9 @@
  * Author Chris Scott <chris.scott@factmint.com>
  * Delivered with and licensed under the MIT licence
  */
+
+// To minify - use the seperate files, iugo-core.js and iugo-bind_to_dom.js, compile at http://closure-compiler.appspot.com and concatinate
+
 window['$iugo'] = {};
 $iugo.$internals = {};
 /** Apply top level getter and setter to each member of the model
