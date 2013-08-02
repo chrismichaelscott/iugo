@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="qunit.css">  
+<script type="text/javascript" src="qunit.js"></script>
+<script src="http://chrismichaelscott.github.io/iugo/iugo.min.js"></script>
+<script>
+window.onload = function() {
+	var testCase = new Iugo({
+		email: "chris@factmint.com",
+		name: "Chris Scott",
+		friends: [
+			{firstname: "Euan", surname: "Holloway", age: 29},
+			{firstname: "Josie", surname: "Capell", age: 29},
+			{firstname: "Alex", surname: "Parkes", age: 30}
+		],
+		contact: {
+			telephone: "999",
+			address: {
+				city: "London",
+				country: "UK",
+				postcode: "N3 4DD"
+			}
+		},
+		work: {
+			name: "FactMint",
+			telephone: "911",
+			address: {
+				city: "New York"
+			}
+		},
+		websites: ["factmint.com", "chrisscott.org", "iugojs.com"],
+		price: 32
+	},
+	
+	document.getElementById("testView"));
+	
+	test('Simple Member Test', function() {
+		var email = document.getElementById('simpleMemberTest');
+		equal(email.innerHTML, "chris@factmint.com", "Simple Member bound by class");
+		testCase.email = "chris.scott@factmint.com";
+		equal(email.innerHTML, "chris.scott@factmint.com", "Updates to the model are reflected in the DOM");
+	});
+	
+	test('Object Member Test', function() {
+		var city = document.getElementById('objectMemberTest');
+		equal(city.innerHTML, "London", "Object Member bound by class and key");
+	});
+	
+	test('Object Binding Test', function() {
+		var emptyObject = document.getElementById('objectFalseTest');
+		equal(emptyObject.innerHTML, "", "No content is bound at the top level of an object");
+		
+		var myTelephone = document.getElementById('objectMemberChildElementTest');
+		equal(myTelephone.innerHTML, "999", "Child elements are bound to members");
+		
+		var postcode = document.getElementById('variableSyntaxTest').children[0];
+		ok(postcode, "Variables are substituted for nodes");
+		equal(postcode.tagName, "SPAN", "Variables are substituted for <span> tags");
+		equal(postcode.attributes[0].name, "data-bind_key", "Variable span tags have a bind key");
+		equal(postcode.attributes[0].value, "address.postcode", "The variable's bind key is set correctly");
+		equal(postcode.innerHTML, "N3 4DD", "The variable span tag is bound to a member");
+		
+		var workCity = document.getElementById('variableSyntaxNamespaceTest').children[0];
+		ok(workCity, "Namespaced variables are substituted for nodes");
+		ok(workCity.className.match("bindto-work"), "The namespaced variable's span is bound to a top-level model");
+		equal(workCity.innerHTML, "New York", "The namespaces variable span tag is bound to a member");
+		
+		var workTelephone = document.getElementById('variableSyntaxNamespaceTest').children[1];
+		ok(workTelephone, "Multiple variables are all sumstituted");
+		equal(workTelephone.innerHTML, "911", "The second namespaces variable tag is bound to a member");
+		
+		var name = document.getElementById('variableSyntaxNamespaceOnlyTest').children[0];
+		ok(name, "A variable with a namespace and no address is still bound to a simple variable");
+		equal(name.innerHTML, "Chris Scott", "The simple variable is adressed by namespace alone");
+	});
+		
+	test('Regex validity test', function() {
+		var priceSentence = document.getElementById('variableSyntaxDollarTest')
+		var price = priceSentence.children[0];
+		ok(price, "Variables are substituted for nodes, even with $ characters in the string");
+		equal(priceSentence.innerHTML.charAt(6), "$", "The dollar ($) character is left intact");
+
+		var messySentence = document.getElementById('variableSyntaxMessyTest')
+		equal(messySentence.children.length, 3, "Substitutions are correct in strings with dollars and braces.");
+	});
+	
+	test('Simple List Binding Test', function() {
+		var list = document.getElementById('simpleListTest').children;
+		equal(list.length, 3, "Each element for a list is bound by the data-bind_each attribute");
+		ok(list[0].innerHTML == "factmint.com" && list[1].innerHTML == "chrisscott.org" && list[2].innerHTML == "iugojs.com", "All elements from the list are bound correctly");
+		
+		testCase.websites.reverse();
+		var list = document.getElementById('simpleListTest').children;
+		ok(list[0].innerHTML == "iugojs.com" && list[1].innerHTML == "chrisscott.org" && list[2].innerHTML == "factmint.com", "All elements from the list are bound correctly after the array is reversed");
+		
+		testCase.websites.push("foodyfare.com");
+		var list = document.getElementById('simpleListTest').children;
+		equal(list.length, 4, "Elements can be pushed onto the array in the model");
+		equal(list[3].innerHTML, "foodyfare.com", "Changes to the array are mapped to the DOM");
+		
+		testCase.websites.sort();
+		var list = document.getElementById('simpleListTest').children;
+		ok(list[0].innerHTML == "chrisscott.org" && list[1].innerHTML == "factmint.com" && list[2].innerHTML == "foodyfare.com" && list[3].innerHTML == "iugojs.com", "All elements from the list are bound correctly after the array is sorted");
+		
+		testCase.websites.splice(1, 2, "google.com");
+		var list = document.getElementById('simpleListTest').children;
+		ok(list[0].innerHTML == "chrisscott.org" && list[1].innerHTML == "google.com" && list[2].innerHTML == "iugojs.com", "All elements from the list are bound correctly after the array is spliced");
+		
+		testCase.websites.unshift("factmint.com");
+		var list = document.getElementById('simpleListTest').children;
+		ok(list[0].innerHTML == "factmint.com" && list[1].innerHTML == "chrisscott.org" && list[2].innerHTML == "google.com" && list[3].innerHTML == "iugojs.com", "All elements from the list are bound correctly after an element is unshifted");
+		
+		testCase.websites.pop();
+		var list = document.getElementById('simpleListTest').children;
+		ok(list[0].innerHTML == "factmint.com" && list[1].innerHTML == "chrisscott.org" && list[2].innerHTML == "google.com", "All elements from the list are bound correctly after an element is popped");
+		
+		testCase.websites.shift();
+		var list = document.getElementById('simpleListTest').children;
+		ok(list[0].innerHTML == "chrisscott.org" && list[1].innerHTML == "google.com", "All elements from the list are bound correctly after an element is shifted");
+	});
+	
+	test('Object List Test', function() {
+		var friendList = document.getElementById('objectListTest').children;
+		equal(friendList.length, 3, "All of the objects from the list are repeated in the DOM");
+		ok(friendList[0].innerHTML == "Euan" && friendList[1].innerHTML == "Josie" && friendList[2].innerHTML == "Alex", "All values from the objects are mapped to the appropriate bind key");
+		
+		var deepFriendsList = document.getElementById('objectDeepListTest').children;
+		equal(deepFriendsList.length, 3, "All of the objects from the list are repeated as child DOM trees");
+		var alex = deepFriendsList[2].children;
+		ok(alex[0].innerHTML == "Alex" && alex[1].innerHTML == "Parkes", "The child nodes with bind keys have been mapped");
+		equal(alex.length, 3, "The variable syntax has been added to the child DOM tree");
+		equal(alex[2].attributes[0].name, "data-bind_key", "A bind key has been added to the variable syntax span");
+		equal(alex[2].attributes[0].value, "age", "The bind key has been set successfully from the variable syntax");
+		equal(alex[2].innerHTML, "30", "The variable syntax span has been mapped correctly");
+	});
+	
+	test('Attribute Binding Test', function() {
+		var country = document.getElementById('attributeBindTest').getAttribute('data-country');
+		equal(country, "UK", "A variable in an attribute has been substituted for the value in the model");
+		
+		var country2 = document.getElementById('attributeBindNamespaceTest').getAttribute('data-country');
+		equal(country2, "UK", "A namespaced variable in an attribute has been substit for the value in the model");
+		
+		var countryImage = document.getElementById('attributeBindInjectTest').getAttribute('src');
+		equal(countryImage, "images/FactMint", "A value from the model has been injected into an attribute replacing the variable but keeping the surrounding content");
+		
+		var countryImage2 = document.getElementById('attributeBindAliasTest').getAttribute('src');
+		equal(countryImage2, "images/FactMint", "A value from the model has been injected into an attribute by an alias");
+		
+		var location = document.getElementById('attributeMultiBindTest').getAttribute('data-location');
+		equal(location, "UK New York", "Multiple variables are substituted in an attribute");
+		
+		var city = document.getElementById('multiAttributeBindTest').getAttribute('data-city');
+		var work = document.getElementById('multiAttributeBindTest').getAttribute('data-work');
+		ok(city == "London" && work == "FactMint", "Multiple attributes are processed within one tag");
+		
+		// Update the model to check the changes are reflected
+		testCase.work.name = "FactMint Ltd";
+		
+		work = document.getElementById('multiAttributeBindTest').getAttribute('data-work');
+		equal(work, "FactMint Ltd", "Updates to the model are reflected in attributes with variables");
+		
+		countryImage = document.getElementById('attributeBindInjectTest').getAttribute('src');
+		equal(countryImage, "images/FactMint Ltd", "Updates to the model are reflected in attributes with variables and surrounding text");
+		
+	});
+};
+</script>
+<style>
+	#testView {
+		display: none;
+	}
+</style>
+</head>
+<body>
+	<div id="testView">
+		<span class="bindto-email" id="simpleMemberTest"></span>
+		<span class="bindto-contact" data-bind_key="address.city" id="objectMemberTest"></span>
+		<div class="bindto-contact" id="objectFalseTest"></div>
+		<div class="bindto-contact">
+			<span data-bind_key="telephone" id="objectMemberChildElementTest"></span>
+			<span id="variableSyntaxTest">My post code is ${address.postcode}.</span>
+			<span id="variableSyntaxNamespaceTest">In ${work:address.city} the Emergency Serives are on ${work:telephone}</span>
+			<span id="variableSyntaxNamespaceOnlyTest">My name is ${name:}</span>
+		</div>
+		<span id="variableSyntaxDollarTest">price $${price}.</span>
+		<span id="variableSyntaxMessyTest">$${price} $ ${price} } { ${price}</span>
+		<ul class="bindto-websites" id="simpleListTest">
+			<li data-bind_each></li>
+		</ul>
+		<ul class="bindto-friends" id="objectListTest">
+			<li data-bind_each data-bind_key="firstname"></li>
+		</ul>
+		<ul class="bindto-friends" id="objectDeepListTest">
+			<li data-bind_each>
+				<span data-bind_key="firstname"></span>
+				<span data-bind_key="surname"></span>
+				is ${age} years old
+			</li>
+		</ul>
+		<div class="bindto-contact" data-country="${address.country}" id="attributeBindTest"></div>
+		<div data-country="${contact:address.country}" id="attributeBindNamespaceTest"></div>
+		<img src="images/${work:name}" id="attributeBindInjectTest"></img>
+		<img data-iugo_alias-src="images/${work:name}" id="attributeBindAliasTest"></img>
+		<div class="bindto-contact" data-location="${address.country} ${work:address.city}" id="attributeMultiBindTest"></div>
+		<div class="bindto-contact" data-city="${address.city}" data-work="${work:name}" id="multiAttributeBindTest"></div>
+	</div>
+	<h1 id="qunit-header">iugo MVVC test coverage</h1>  
+	<h2 id="qunit-banner"></h2>  
+	<div id="qunit-testrunner-toolbar"></div>  
+	<h2 id="qunit-userAgent"></h2>  
+	<ol id="qunit-tests"></ol>
+</body>
+</html>
