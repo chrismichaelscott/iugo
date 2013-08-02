@@ -251,7 +251,7 @@ $iugo['store']['bind_to_dom'] = {
 $iugo['initializers'].push(function(view) {
 	var idCounter = 0;
 	
-	var innerHTMLRegex = /(>[^<$]*)\$\{([^:.}<]+:)?([^}<]*)\}([^<]*<)/g;
+	var innerHTMLRegex = /(>[^<]*)\$\{([^:.}<]+:)?([^}<]*)\}([^<]*<)/g;
 	// it is important to repeat the regex as it will only match one ${var} per tag innerHTML
 	while (view.innerHTML.match(innerHTMLRegex)) {
 		view.innerHTML = view.innerHTML.replace(innerHTMLRegex, function(m, before, namespace, address, after) {

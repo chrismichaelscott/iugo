@@ -5,8 +5,10 @@
 <link rel="stylesheet" href="qunit.css">  
 <script type="text/javascript" src="qunit.js"></script>
 <script src="../iugo.min.js"></script>
-<!--<script src="../iugo-core.js"></script>
-<script src="../iugo-bind_to_dom.js"></script>-->
+<!--
+<script src="../iugo-core.min.js"></script>
+<script src="../iugo-bind_to_dom.min.js"></script>
+-->
 <script>
 window.onload = function() {
 	var testCase = new Iugo({
@@ -32,7 +34,8 @@ window.onload = function() {
 				city: "New York"
 			}
 		},
-		websites: ["factmint.com", "chrisscott.org", "iugojs.com"]
+		websites: ["factmint.com", "chrisscott.org", "iugojs.com"],
+		price: 32
 	},
 	
 	document.getElementById("testView"));
@@ -75,6 +78,16 @@ window.onload = function() {
 		var name = document.getElementById('variableSyntaxNamespaceOnlyTest').children[0];
 		ok(name, "A variable with a namespace and no address is still bound to a simple variable");
 		equal(name.innerHTML, "Chris Scott", "The simple variable is adressed by namespace alone");
+	});
+		
+	test('Regex validity test', function() {
+		var priceSentence = document.getElementById('variableSyntaxDollarTest')
+		var price = priceSentence.children[0];
+		ok(price, "Variables are substituted for nodes, even with $ characters in the string");
+		equal(priceSentence.innerHTML.charAt(6), "$", "The dollar ($) character is left intact");
+
+		var messySentence = document.getElementById('variableSyntaxMessyTest')
+		equal(messySentence.children.length, 3, "Substitutions are correct in strings with dollars and braces.");
 	});
 	
 	test('Simple List Binding Test', function() {
@@ -176,6 +189,8 @@ window.onload = function() {
 			<span id="variableSyntaxNamespaceTest">In ${work:address.city} the Emergency Serives are on ${work:telephone}</span>
 			<span id="variableSyntaxNamespaceOnlyTest">My name is ${name:}</span>
 		</div>
+		<span id="variableSyntaxDollarTest">price $${price}.</span>
+		<span id="variableSyntaxMessyTest">$${price} $ ${price} } { ${price}</span>
 		<ul class="bindto-websites" id="simpleListTest">
 			<li data-bind_each></li>
 		</ul>
