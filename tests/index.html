@@ -31,7 +31,15 @@ window.onload = function() {
 			}
 		},
 		websites: ["factmint.com", "chrisscott.org", "iugojs.com"],
-		price: 32
+		price: 32,
+		interests: {
+			books: [
+				{
+					author: "Jules Verne",
+					title: "Around the world in 80 days"
+				}
+			]
+		}
 	},
 	
 	document.getElementById("testView"));
@@ -134,6 +142,15 @@ window.onload = function() {
 		equal(alex[2].attributes[0].name, "data-bind_key", "A bind key has been added to the variable syntax span");
 		equal(alex[2].attributes[0].value, "age", "The bind key has been set successfully from the variable syntax");
 		equal(alex[2].innerHTML, "30", "The variable syntax span has been mapped correctly");
+		
+		var secondLevelList = document.getElementById('secondLevelListTest').children;
+		equal(secondLevelList.length, 1, "All of the objects from the second level list are repeated as child DOM trees");
+		var jules = secondLevelList[0];
+		equal(jules.innerHTML, "Jules Verne", "The child nodes with bind keys have been mapped");
+		
+		var secondLevelDeepList = document.getElementById('secondLevelDeepListTest').children;
+		var title = secondLevelDeepList[0].children[0];
+		equal(title.innerHTML, "Around the world in 80 days", "The child nodes with bind keys have been mapped from the list");
 	});
 	
 	test('Attribute Binding Test', function() {
@@ -200,6 +217,18 @@ window.onload = function() {
 				is ${age} years old
 			</li>
 		</ul>
+		<div class="bindto-interests">
+			<ul data-bind_key="books" id="secondLevelListTest">
+				<li data-bind_each data-bind_key="author"></li>
+			</ul>
+		</div>
+		<div class="bindto-interests">
+			<ul data-bind_key="books" id="secondLevelDeepListTest">
+				<li data-bind_each>
+					<span data-bind_key="title"></span>
+				</li>
+			</ul>
+		</div>
 		<div class="bindto-contact" data-country="${address.country}" id="attributeBindTest"></div>
 		<div data-country="${contact:address.country}" id="attributeBindNamespaceTest"></div>
 		<img src="images/${work:name}" id="attributeBindInjectTest"></img>
