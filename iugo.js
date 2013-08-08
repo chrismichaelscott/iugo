@@ -415,12 +415,13 @@ $iugo['defaultViewcontrollers'].push(function(property, value, view, path) {
 				var nextPath = attribute.slice(path.length).split('.')[0];
 				
 				process(value[nextPath], view, path + nextPath);
-			}
-			for (var x = 0; x < view.children.length; x++) {
-				// it is possible to use a bindto-XXX class in a sub-element of an already bound element
-				// in that case we want to skip the DOM descent from the parent and wait until the child has its own binding iteration
-				if (! view.children[x].className.match("bindto-")) {
-					process(value, view.children[x], path);
+			} else {
+				for (var x = 0; x < view.children.length; x++) {
+					// it is possible to use a bindto-XXX class in a sub-element of an already bound element
+					// in that case we want to skip the DOM descent from the parent and wait until the child has its own binding iteration
+					if (! view.children[x].className.match("bindto-")) {
+						process(value, view.children[x], path);
+					}
 				}
 			}
 		} else {
