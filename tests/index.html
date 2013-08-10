@@ -143,14 +143,20 @@ window.onload = function() {
 		equal(alex[2].attributes[0].value, "age", "The bind key has been set successfully from the variable syntax");
 		equal(alex[2].innerHTML, "30", "The variable syntax span has been mapped correctly");
 		
+		testCase.friends.reverse();
+		var euan = deepFriendsList[2].children;
+		ok(euan[0].innerHTML == "Euan" && euan[1].innerHTML == "Holloway", "After reversing, the child nodes with bind keys have been mapped");
+		equal(euan.length, 3, "After reversing, the variable syntax has been added to the child DOM tree");
+		equal(euan[2].innerHTML, "29", "After reversing, the variable syntax span has been mapped correctly");
+		
 		var secondLevelList = document.getElementById('secondLevelListTest').children;
 		equal(secondLevelList.length, 1, "All of the objects from the second level list are repeated as child DOM trees");
 		var jules = secondLevelList[0];
-		equal(jules.innerHTML, "Jules Verne", "The child nodes with bind keys have been mapped");
+		equal(jules.innerHTML, "Jules Verne", "The child nodes with bind keys, from the second level list, have been mapped");
 		
 		var secondLevelDeepList = document.getElementById('secondLevelDeepListTest').children;
 		var title = secondLevelDeepList[0].children[0];
-		equal(title.innerHTML, "Around the world in 80 days", "The child nodes with bind keys have been mapped from the list");
+		equal(title.innerHTML, "Around the world in 80 days", "The child nodes with bind keys, from the second level list, have been mapped from the list");
 	});
 	
 	test('Attribute Binding Test', function() {
@@ -181,6 +187,20 @@ window.onload = function() {
 		
 		countryImage = document.getElementById('attributeBindInjectTest').getAttribute('src');
 		equal(countryImage, "images/FactMint Ltd", "Updates to the model are reflected in attributes with variables and surrounding text");
+		
+	});
+	
+	test('Attribute Binding with Lists', function() {
+		var friends = document.getElementById("attributeBindingInListTest").children;
+		equal(friends[0].children[0].getAttribute("href"), friends[0].children[0].children[0].innerHTML, "The attribute bindings match the inner HTML bindings for the first element in list");
+		equal(friends[1].children[0].getAttribute("href"), friends[1].children[0].children[0].innerHTML, "The attribute bindings match the inner HTML bindings for the second element in list");
+		equal(friends[2].children[0].getAttribute("href"), friends[2].children[0].children[0].innerHTML, "The attribute bindings match the inner HTML bindings for the third element in list");
+		
+		testCase.friends.reverse();
+		
+		equal(friends[0].children[0].getAttribute("href"), friends[0].children[0].children[0].innerHTML, "After reversing, the attribute bindings match the inner HTML bindings for the first element in list");
+		equal(friends[1].children[0].getAttribute("href"), friends[1].children[0].children[0].innerHTML, "After reversing, the attribute bindings match the inner HTML bindings for the second element in list");
+		equal(friends[2].children[0].getAttribute("href"), friends[2].children[0].children[0].innerHTML, "After reversing, the attribute bindings match the inner HTML bindings for the third element in list");
 		
 	});
 };
@@ -235,6 +255,11 @@ window.onload = function() {
 		<img data-iugo_alias-src="images/${work:name}" id="attributeBindAliasTest"></img>
 		<div class="bindto-contact" data-location="${address.country} ${work:address.city}" id="attributeMultiBindTest"></div>
 		<div class="bindto-contact" data-city="${address.city}" data-work="${work:name}" id="multiAttributeBindTest"></div>
+		<ul class="bindto-friends" id="attributeBindingInListTest">
+			<li data-bind_each>
+				<a href="${firstname}">${firstname}</a>
+			</li>
+		</ul>
 	</div>
 	<h1 id="qunit-header">iugo MVVC test coverage</h1>  
 	<h2 id="qunit-banner"></h2>  
