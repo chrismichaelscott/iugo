@@ -241,16 +241,18 @@ $iugo["store"] = {};
 window["Iugo"] = function(model, view, viewcontroller) {
     return new $iugo.$internals.MVVC(model, view, viewcontroller);
 };
+
+// ** START BIND_TO_DOM controller ** //
+
 // Create a metadata store
 $iugo['store']['bind_to_dom'] = {
 	tags: [],
-	namespacedTagIndex: {}
+	namespacedTagIndex: {},
+	idCounter: 0
 };
 
 // This initializer swaps ${var} for <spans> with attributes for use with the VC below
-$iugo['initializers'].push(function(view) {
-	var idCounter = 0;
-	
+$iugo['initializers'].push(function(view) {	
 	var innerHTMLRegex = /(>[^<]*)\$\{([^:.}<]+:)?([^}<]*)\}([^<]*<)/g;
 	// it is important to repeat the regex as it will only match one ${var} per tag innerHTML
 	while (view.innerHTML.match(innerHTMLRegex)) {
@@ -268,7 +270,7 @@ $iugo['initializers'].push(function(view) {
 	// First find tags that use a variable syntax in an attribute
 	var tagRegex = /<[^>]+ [^ =]+="[^"]*\$\{[^}<"]+\}[^"]*"[^>]*>/g;
 	view.innerHTML = view.innerHTML.replace(tagRegex, function(tag) {
-		var tagId = idCounter++;
+		var tagId = $iugo['store']['bind_to_dom'].idCounter++;
 		
 		$iugo['store']['bind_to_dom'].tags[tagId] = {
 			bindAttributes: [],
@@ -358,6 +360,20 @@ $iugo['defaultViewcontrollers'].push(function(property, value, view, path) {
 		}
 	}
 	
+	function cloneTagIndex(view) {
+		var oldId = view.getAttribute("data-iugo_id");
+		var newId = $iugo['store']['bind_to_dom'].idCounter++;
+		
+		var oldIndex = $iugo['store']['bind_to_dom'].tags[oldId];
+		$iugo['store']['bind_to_dom'].tags[newId] = {
+			bindAttributes: oldIndex.bindAttributes,
+			attributeTemplates: oldIndex.attributeTemplates,
+			replacements: {}
+		};
+		
+		view.setAttribute("data-iugo_id", newId);
+	}
+	
 	/**
 	 * Recursively scan the given view looking for replacements to variables and
 	 * marked tag's innerHTML.
@@ -397,6 +413,17 @@ $iugo['defaultViewcontrollers'].push(function(property, value, view, path) {
 					if (y >= 1) {
 						duplicateElement = elementView.cloneNode(true);
 						duplicateElement.classList.add("iugo_cloned");
+						
+						// Look for cloned elements further down the hierarchy which have attributes with variables...
+						// ...and unlink from the clone-template's ID
+						if (duplicateElement.hasAttribute("data-iugo_id")) {
+							cloneTagIndex(duplicateElement);
+						}
+						var clonedTagsWithAttributeReplacements = duplicateElement.querySelectorAll('[data-iugo_id]');
+						for (var z = 0; z < clonedTagsWithAttributeReplacements.length; z++) {
+							cloneTagIndex(clonedTagsWithAttributeReplacements[z]);
+						}
+						
 						view.appendChild(duplicateElement);
 					} else {
 						duplicateElement = elementView;
