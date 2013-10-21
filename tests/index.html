@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <link rel="stylesheet" href="qunit.css">  
 <script type="text/javascript" src="qunit.js"></script>
-<script src="../iugo.js"></script>
+<script src="../iugo-core.js"></script>
+<script src="../iugo-bind_to_dom.js"></script>
 <script>
 window.onload = function() {
 	var testCase = new Iugo({
@@ -31,6 +32,7 @@ window.onload = function() {
 			}
 		},
 		websites: ["factmint.com", "chrisscott.org", "iugojs.com"],
+		blogrole: ["lea.verou.me", "chrisscott.org", "css-tricks.com"],
 		price: 32,
 		interests: {
 			books: [
@@ -127,6 +129,13 @@ window.onload = function() {
 		testCase.websites.shift();
 		var list = document.getElementById('simpleListTest').children;
 		ok(list[0].innerHTML == "chrisscott.org" && list[1].innerHTML == "google.com", "All elements from the list are bound correctly after an element is shifted");
+	});
+	
+	test('Dot syntax List Binding Test', function() {
+		var list = document.getElementById('dotVariableListTest').children;
+		equal(list.length, 3, "Each element for a list is bound by the data-bind_each attribute");
+		equal(list[0].getElementsByTagName("a")[0].getAttribute("href"), "http://lea.verou.me", "The dot syntax works in attributes");
+		equal(list[1].getElementsByTagName("span")[0].innerHTML, "chrisscott.org", "The dot syntax works for binding innerHTML");
 	});
 	
 	test('Object List Test', function() {
@@ -226,6 +235,11 @@ window.onload = function() {
 		<span id="variableSyntaxMessyTest">$${price} $ ${price} } { ${price}</span>
 		<ul class="bindto-websites" id="simpleListTest">
 			<li data-bind_each></li>
+		</ul>
+		<ul class="bindto-blogrole" id="dotVariableListTest">
+			<li data-bind_each>
+				<a href="http://${.}">Go to ${.}</a>
+			</li>
 		</ul>
 		<ul class="bindto-friends" id="objectListTest">
 			<li data-bind_each data-bind_key="firstname"></li>

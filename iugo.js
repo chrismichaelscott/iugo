@@ -348,6 +348,8 @@ $iugo['defaultViewcontrollers'].push(function(property, value, view, path) {
 						var source = address.split('.');
 						var workingValue = value;
 						for (var x = 0; x < source.length; x++) {
+							if (source[x] == "") continue;
+							
 							workingValue = workingValue[source[x]];
 						}
 						$iugo['store']['bind_to_dom'].tags[tagId].replacements[match] = workingValue;
@@ -432,14 +434,14 @@ $iugo['defaultViewcontrollers'].push(function(property, value, view, path) {
 				}
 			}
 		} else if (value instanceof Object) {
-			var attribute = view.getAttribute('data-bind_key');
-			if (attribute != null && attribute != "") {
+			var bindKey = view.getAttribute('data-bind_key');
+			if (bindKey != null && bindKey != "") {
 				if (path == null) {
 					path = "";
 				} else {
 					path += ".";
 				}
-				var nextPath = attribute.slice(path.length).split('.')[0];
+				var nextPath = bindKey.slice(path.length).split('.')[0];
 				
 				process(value[nextPath], view, path + nextPath);
 			} else {
@@ -452,10 +454,16 @@ $iugo['defaultViewcontrollers'].push(function(property, value, view, path) {
 				}
 			}
 		} else {
-			if (view.tagName == "INPUT") {
-				view.value = value;
+			if (view.children.length > 0) {
+				for (var x = 0; x < view.children.length; x++) {
+					process(value, view.children[x], path);
+				}
 			} else {
-				view.innerHTML = value;
+				if (view.tagName == "INPUT") {
+					view.value = value;
+				} else {
+					view.innerHTML = value;
+				}
 			}
 		}
 	}
