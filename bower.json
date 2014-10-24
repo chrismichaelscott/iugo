@@ -1,0 +1,23 @@
+{
+  "name": "iugo",
+  "main": "iugo.js",
+  "version": "1.2.0",
+  "homepage": "https://github.com/chrismichaelscott/iugo",
+  "authors": [
+    "Chris Michael Scott"
+  ],
+  "description": "A super-lightweight library for data-binding",
+  "keywords": [
+    "iugo",
+    "library",
+    "data-binding"
+  ],
+  "license": "https://raw.githubusercontent.com/chrismichaelscott/iugo/master/LICENSE.txt",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "name": "iugo",
+  "version": "1.2.0",
+  "homepage": "https://github.com/chrismichaelscott/iugo",
+  "description": "A super-lightweight library for data-binding",
+  "keywords": [
+    "iugo",
+    "library",
+    "data-binding"
+  ],
+  "license": "https://raw.githubusercontent.com/chrismichaelscott/iugo/master/LICENSE.txt"
+}
