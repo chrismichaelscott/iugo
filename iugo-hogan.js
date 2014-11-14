@@ -18,22 +18,19 @@ $iugo['initializers'].push(function(view, store) {
 		
 		var key = template.getAttribute('data-bindto');
 		if (! key) {
-			throw 'BINDING ERROR: attribute "data-bindto" must be set to a key from the model';
+			throw 'BINDING ERROR: "data-bindto" must be set to a key';
 		}
 		
 		if (! store[key]) {
 			store[key] = [];
 		}
 		
-		var node = document.createElement("div");
-		template.parentNode.insertBefore(node, template);
-
 		store[key].push({
-			node: node,
+			injectAt: templateNumber,
 			template: Hogan.compile(template.innerHTML)
 		});
 		
-		template.parentNode.removeChild(template);
+		template.outerHTML = "<!--IUGOSTART" + templateNumber + "--><!--IUGOEND" + templateNumber + "-->";
 	}
 });
 // This VC renders Hogan templates
@@ -44,7 +41,11 @@ $iugo['defaultViewcontrollers'].push(function(property, value, view, store) {
 		for (var partialNumber = 0; partialNumber < partials.length; partialNumber++) {
 			var partial = partials[partialNumber];
 			
-			partial.node.innerHTML = partial.template.render(value);
+			var startInject = "<!--IUGOSTART" + partial.injectAt + "-->";
+			var endInject = "<!--IUGOEND" + partial.injectAt + "-->";
+			var r = new RegExp(startInject + "[\\s\\S]*" + endInject);
+			var n = startInject + partial.template.render(value) + endInject;
+			view.innerHTML = view.innerHTML.replace(r, n);
 		}
 	}
 });
