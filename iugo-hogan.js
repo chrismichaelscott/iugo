@@ -26,7 +26,6 @@ $iugo['initializers'].push(function(view, store) {
 		}
 		
 		var node = document.createElement("div");
-		node.innerHTML = "<!-- Created by Iugo -->";
 		template.parentNode.insertBefore(node, template);
 
 		store[key].push({
