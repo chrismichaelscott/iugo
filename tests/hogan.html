@@ -98,22 +98,26 @@ window.onload = function() {
 </head>
 <body>
 	<div id="testView">
-		<div data-bindto="interests">
+		<script data-bindto="interests" type="text/x-mustache-template">
+		<div>
 			<dl id="secondLevelDeepListTest">
 				{{#books}}
 				<dt>{{author}}</dt><dd>{{title}}</dd>
 				{{/books}}
 			</dl>
 		</div>
+		</script>
 	</div>
 	<div id="testView2">
-		<div data-bindto="interests">
-			<dl id="secondLevelDeepListTest">
+		<script data-bindto="interests" type="text/x-mustache-template">
+		<div>
+			<dl id="secondLevelDeepListTest2">
 				{{#books}}
 				<dt>{{author}}</dt><dd>{{title}}</dd>
 				{{/books}}
 			</dl>
 		</div>
+		</script>
 	</div>
 	<h1 id="qunit-header">iugo MVVC test coverage</h1>  
 	<h2 id="qunit-banner"></h2>  

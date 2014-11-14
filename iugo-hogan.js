@@ -11,12 +11,12 @@
 // This initializer compiles innerHTML (mustache templates) with Hogan
 $iugo['initializers'].push(function(view, store) {
 
-	var templateNodes = view.querySelectorAll('[data-bindto]');
+	var templateNodes = view.querySelectorAll('script[data-bindto][type="text/x-mustache-template"]');
 	
-	for (var nodeNumber = 0; nodeNumber < templateNodes.length; nodeNumber++) {
-		var node = templateNodes[nodeNumber];
+	for (var templateNumber = 0; templateNumber < templateNodes.length; templateNumber++) {
+		var template = templateNodes[templateNumber];
 		
-		var key = node.getAttribute('data-bindto');
+		var key = template.getAttribute('data-bindto');
 		if (! key) {
 			throw 'BINDING ERROR: attribute "data-bindto" must be set to a key from the model';
 		}
@@ -25,10 +25,16 @@ $iugo['initializers'].push(function(view, store) {
 			store[key] = [];
 		}
 		
+		var node = document.createElement("div");
+		node.innerHTML = "<!-- Created by Iugo -->";
+		template.parentNode.insertBefore(node, template);
+
 		store[key].push({
 			node: node,
-			template: Hogan.compile(node.innerHTML)
+			template: Hogan.compile(template.innerHTML)
 		});
+		
+		template.parentNode.removeChild(template);
 	}
 });
 // This VC renders Hogan templates
