@@ -177,19 +177,22 @@ $iugo.$internals.clone = function(obj) {
  * NB. this is aliased by the Iugo Function
  */
 $iugo.$internals.MVVC = function(model, view, viewcontroller) {
+	this.store = {};
 	this.view = (view) ? view : document.body;
+	
 	this.viewcontroller = (viewcontroller) ? viewcontroller : {};
 	for (var x = 0; x < this.initializers.length; x++ ) {
 		if (this.initializers[x] instanceof Function) {
-			this.initializers[x](this.view);
+			this.initializers[x](this.view, this.store);
 		}
 	}
+    
+    // The "Dollar" field holds references to all members and sub-members of the model, without any getters or setters
+    this.$ = {};
 	// Lastly set the model
 	this.model = model;
 };
 $iugo.$internals.MVVC.prototype = {
-	// The "Dollar" field holds references to all members and sub-members of the model, without any getters or setters
-    "$": {},
     // Prototypal setter for the top level model. I.E how you define a model
     set model(model) {
         for (var member in model) {
@@ -197,17 +200,19 @@ $iugo.$internals.MVVC.prototype = {
             this[member] = model[member];
         }
     },
+    
     // Trigger the view to update
     updateView: function(prop, value) {
 		for (var x = 0; x < this.defaultViewcontrollers.length; x++) {
 			if (this.defaultViewcontrollers[x] instanceof Function) {
-				this.defaultViewcontrollers[x](prop, value, this.view);
+				this.defaultViewcontrollers[x](prop, value, this.view, this.store);
 			}
 		}
 		if (typeof(this.viewcontroller[prop]) !== 'undefined' && this.viewcontroller[prop] instanceof Function) {
-			this.viewcontroller[prop](value, this.view);
+			this.viewcontroller[prop](value, this.view, this.store);
 		}
     },
+    
     // The deafultViewcontrollers and initializers are added as plugins
     "defaultViewcontrollers": [],
     "initializers": []
@@ -216,7 +221,6 @@ $iugo.$internals.MVVC.prototype = {
 // Make the API available to plugins
 $iugo["defaultViewcontrollers"] = $iugo.$internals.MVVC.prototype.defaultViewcontrollers;
 $iugo["initializers"] = $iugo.$internals.MVVC.prototype.initializers;
-$iugo["store"] = {};
 /*
  * This is the "public" view on the framework
  *

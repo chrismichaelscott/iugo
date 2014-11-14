@@ -19,5 +19,8 @@
     "bower_components",
     "test",
     "tests"
-  ]
+  ],
+  "dependencies": {
+    "hogan": "~3.0.2"
+  }
 }

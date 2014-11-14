@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="qunit.css">  
+<script type="text/javascript" src="qunit.js"></script>
+
+<script type="text/javascript" src="../bower_components/hogan/web/builds/3.0.2/hogan-3.0.2.js"></script>
+<script src="../iugo-core.js"></script>
+<script src="../iugo-hogan.js"></script>
+
+<!--<script src="../iugo-hogan.min.js"></script>-->
+<script>
+window.onload = function() {
+	window['hogantest'] = new Iugo({
+		email: "chris@factmint.com",
+		name: "Chris Scott",
+		friends: [
+			{firstname: "Euan", surname: "Holloway", age: 29},
+			{firstname: "Josie", surname: "Capell", age: 29},
+			{firstname: "Alex", surname: "Parkes", age: 30}
+		],
+		contact: {
+			telephone: "999",
+			address: {
+				city: "London",
+				country: "UK",
+				postcode: "N3 4DD"
+			}
+		},
+		work: {
+			name: "FactMint",
+			telephone: "911",
+			address: {
+				city: "New York"
+			}
+		},
+		websites: ["factmint.com", "chrisscott.org", "iugojs.com"],
+		blogrole: ["lea.verou.me", "chrisscott.org", "css-tricks.com"],
+		price: 32,
+		interests: {
+			books: [
+				{
+					author: "Jules Verne",
+					title: "Around the world in 80 days"
+				}
+			]
+		}
+	},
+	
+	document.getElementById("testView"));
+	
+	window['hogantest2'] = new Iugo({
+		email: "chris@factmint.com",
+		name: "Chris Scott",
+		friends: [
+			{firstname: "Euan", surname: "Holloway", age: 29},
+			{firstname: "Josie", surname: "Capell", age: 29},
+			{firstname: "Alex", surname: "Parkes", age: 30}
+		],
+		contact: {
+			telephone: "999",
+			address: {
+				city: "London",
+				country: "UK",
+				postcode: "N3 4DD"
+			}
+		},
+		work: {
+			name: "FactMint",
+			telephone: "911",
+			address: {
+				city: "New York"
+			}
+		},
+		websites: ["factmint.com", "chrisscott.org", "iugojs.com"],
+		blogrole: ["lea.verou.me", "chrisscott.org", "css-tricks.com"],
+		price: 32,
+		interests: {
+			books: [
+				{
+					author: "Jules Verne",
+					title: "Around the world in 80 days"
+				}
+			]
+		}
+	},
+	
+	document.getElementById("testView2"));
+};
+</script>
+
+<style>
+	#testView {
+		/*display: none;*/
+	}
+</style>
+</head>
+<body>
+	<div id="testView">
+		<div data-bindto="interests">
+			<dl id="secondLevelDeepListTest">
+				{{#books}}
+				<dt>{{author}}</dt><dd>{{title}}</dd>
+				{{/books}}
+			</dl>
+		</div>
+	</div>
+	<div id="testView2">
+		<div data-bindto="interests">
+			<dl id="secondLevelDeepListTest">
+				{{#books}}
+				<dt>{{author}}</dt><dd>{{title}}</dd>
+				{{/books}}
+			</dl>
+		</div>
+	</div>
+	<h1 id="qunit-header">iugo MVVC test coverage</h1>  
+	<h2 id="qunit-banner"></h2>  
+	<div id="qunit-testrunner-toolbar"></div>  
+	<h2 id="qunit-userAgent"></h2>  
+	<ol id="qunit-tests"></ol>
+</body>
+</html>
