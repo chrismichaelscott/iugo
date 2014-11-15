@@ -9,9 +9,9 @@
  * Delivered with and licensed under the MIT licence
  */
 // This initializer compiles innerHTML (mustache templates) with Hogan
-$iugo['initializers'].push(function(view, store) {
+$iugo['initializers'].push(function(mvvc) {
 
-	var templateNodes = view.querySelectorAll('script[data-bindto][type="text/x-mustache-template"]');
+	var templateNodes = mvvc.scope.querySelectorAll('script[data-bindto][type="text/x-mustache-template"]');
 	
 	for (var templateNumber = 0; templateNumber < templateNodes.length; templateNumber++) {
 		var template = templateNodes[templateNumber];
@@ -21,11 +21,12 @@ $iugo['initializers'].push(function(view, store) {
 			throw 'BINDING ERROR: "data-bindto" must be set to a key';
 		}
 		
-		if (! store[key]) {
-			store[key] = [];
+		if (! mvvc.store[key]) {
+			mvvc.store[key] = [];
 		}
 		
-		store[key].push({
+		mvvc.store[key].push({
+			parent: template.parentNode,
 			injectAt: templateNumber,
 			template: Hogan.compile(template.innerHTML)
 		});
@@ -33,8 +34,9 @@ $iugo['initializers'].push(function(view, store) {
 		template.outerHTML = "<!--IUGOSTART" + templateNumber + "--><!--IUGOEND" + templateNumber + "-->";
 	}
 });
+
 // This VC renders Hogan templates
-$iugo['defaultViewcontrollers'].push(function(property, value, view, store) {
+$iugo['defaultViewcontrollers'].push(function(property, value, scope, store) {
 	var partials = store[property];
 	
 	if (partials) {
@@ -45,7 +47,7 @@ $iugo['defaultViewcontrollers'].push(function(property, value, view, store) {
 			var endInject = "<!--IUGOEND" + partial.injectAt + "-->";
 			var r = new RegExp(startInject + "[\\s\\S]*" + endInject);
 			var n = startInject + partial.template.render(value) + endInject;
-			view.innerHTML = view.innerHTML.replace(r, n);
+			partial.parent.innerHTML = partial.parent.innerHTML.replace(r, n);
 		}
 	}
 });
