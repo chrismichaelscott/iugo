@@ -5,14 +5,21 @@
 <link rel="stylesheet" href="qunit.css">  
 <script type="text/javascript" src="qunit.js"></script>
 
+
 <script type="text/javascript" src="../bower_components/hogan/web/builds/3.0.2/hogan-3.0.2.js"></script>
 <script src="../iugo-core.js"></script>
 <script src="../iugo-hogan.js"></script>
+<script src="../iugo-events.js"></script>
+<script src="../iugo-http.js"></script>
 
-<!--<script src="../iugo-hogan.min.js"></script>-->
+<!--
+<script src="../iugo-framework.min.js"></script>
+-->
+
 <script>
 window.onload = function() {
 	window['hogantest'] = new Iugo({
+		test: Iugo.http.get('sample.json'),
 		email: "chris@factmint.com",
 		name: "Chris Scott",
 		friends: [
@@ -87,6 +94,16 @@ window.onload = function() {
 	},
 	
 	document.getElementById("testView2"));
+	
+	hogantest2.controller = {
+		f: function(model) {
+			this.style.backgroundColor = 'red';
+			console.log(model);
+		},
+		g: function() {
+			this.style.backgroundColor = 'grey';
+		}
+	};
 };
 </script>
 
@@ -98,19 +115,15 @@ window.onload = function() {
 </head>
 <body>
 	<div id="testView">
-		<script data-bindto="interests" type="text/x-mustache-template">
+		<script data-bindto="test" type="text/x-mustache-template">
 		<div>
-			<dl id="secondLevelDeepListTest">
-				{{#books}}
-				<dt>{{author}}</dt><dd>{{title}}</dd>
-				{{/books}}
-			</dl>
+			<span>{{sport}}</span>
 		</div>
 		</script>
 	</div>
 	<div id="testView2">
 		<script data-bindto="interests" type="text/x-mustache-template">
-		<div>
+		<div data-hoverin="f" data-hoverout="g">
 			<dl id="secondLevelDeepListTest2">
 				{{#books}}
 				<dt>{{author}}</dt><dd>{{title}}</dd>
