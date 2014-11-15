@@ -20,9 +20,15 @@ $iugo.$internals.registerModelMember = function(obj, prop) {
         	return this.$[prop];
         },
         set: function(value) {
-        	this.updateView(prop, value);
-			this.$[prop] = value;
-			$iugo.$internals.applySetters(value, this, [prop], value);
+        	if (value instanceof Promise) {
+        		value.then(function(result) {
+        			obj[prop] = result;
+        		});
+        	} else {
+	        	this.updateView(prop, value);
+				this.$[prop] = value;
+				$iugo.$internals.applySetters(value, this, [prop], value);	
+        	}
         }
     });
 };
@@ -176,40 +182,37 @@ $iugo.$internals.clone = function(obj) {
  * Main MVVC constructor
  * NB. this is aliased by the Iugo Function
  */
-$iugo.$internals.MVVC = function(model, view, viewcontroller) {
+$iugo.$internals.MVVC = function(model, scope) {
 	this.store = {};
-	this.view = (view) ? view : document.body;
+	this.scope = (scope) ? scope : document.body;
 	
-	this.viewcontroller = (viewcontroller) ? viewcontroller : {};
+	this.controller = {};
+	this.viewcontroller = {};
+	
 	for (var x = 0; x < this.initializers.length; x++ ) {
 		if (this.initializers[x] instanceof Function) {
-			this.initializers[x](this.view, this.store);
+			this.initializers[x](this);
 		}
 	}
     
     // The "Dollar" field holds references to all members and sub-members of the model, without any getters or setters
     this.$ = {};
 	// Lastly set the model
-	this.model = model;
+	for (var member in model) {
+        $iugo.$internals.registerModelMember(this, member);
+        this[member] = model[member];
+    }
 };
 $iugo.$internals.MVVC.prototype = {
-    // Prototypal setter for the top level model. I.E how you define a model
-    set model(model) {
-        for (var member in model) {
-            $iugo.$internals.registerModelMember(this, member);
-            this[member] = model[member];
-        }
-    },
-    
     // Trigger the view to update
     updateView: function(prop, value) {
 		for (var x = 0; x < this.defaultViewcontrollers.length; x++) {
 			if (this.defaultViewcontrollers[x] instanceof Function) {
-				this.defaultViewcontrollers[x](prop, value, this.view, this.store);
+				this.defaultViewcontrollers[x](prop, value, this.scope, this.store);
 			}
 		}
 		if (typeof(this.viewcontroller[prop]) !== 'undefined' && this.viewcontroller[prop] instanceof Function) {
-			this.viewcontroller[prop](value, this.view, this.store);
+			this.viewcontroller[prop](value, this.scope, this.store);
 		}
     },
     
@@ -245,6 +248,6 @@ $iugo["initializers"] = $iugo.$internals.MVVC.prototype.initializers;
  * for each member, the viewcontroller hold a function which will be executed upon update.
  * By default this is an empty object which leaves processing to pluigns via the defaultViewcontroller stack
  */
-window["Iugo"] = function(model, view, viewcontroller) {
-    return new $iugo.$internals.MVVC(model, view, viewcontroller);
+window["Iugo"] = function(model, scope) {
+    return new $iugo.$internals.MVVC(model, scope);
 };
