@@ -1,4 +1,4 @@
-window["Iugo"].http = {
+window["Iugo"]["http"] = {
 	get: function(url, processor, username, password) {
 		return this.xhr('get', url, undefined, {}, username, password);
 	},

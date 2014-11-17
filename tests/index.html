@@ -4,11 +4,15 @@
 <meta charset="UTF-8">
 <link rel="stylesheet" href="qunit.css">  
 <script type="text/javascript" src="qunit.js"></script>
+<script src="../iugo.min.js"></script>
+<!--
 <script src="../iugo-core.js"></script>
 <script src="../iugo-bind_to_dom.js"></script>
+-->
 <script>
 window.onload = function() {
 	var testCase = new Iugo({
+		response: Iugo.http.get('sample.json'),
 		email: "chris@factmint.com",
 		name: "Chris Scott",
 		friends: [
@@ -68,7 +72,7 @@ window.onload = function() {
 		var postcode = document.getElementById('variableSyntaxTest').children[0];
 		ok(postcode, "Variables are substituted for nodes");
 		equal(postcode.tagName, "SPAN", "Variables are substituted for <span> tags");
-		equal(postcode.attributes[0].name, "data-bind_key", "Variable span tags have a bind key");
+		equal(postcode.attributes[0].name, "data-path", "Variable span tags have a bind key");
 		equal(postcode.attributes[0].value, "address.postcode", "The variable's bind key is set correctly");
 		equal(postcode.innerHTML, "N3 4DD", "The variable span tag is bound to a member");
 		
@@ -98,7 +102,7 @@ window.onload = function() {
 	
 	test('Simple List Binding Test', function() {
 		var list = document.getElementById('simpleListTest').children;
-		equal(list.length, 3, "Each element for a list is bound by the data-bind_each attribute");
+		equal(list.length, 3, "Each element for a list is bound by the data-each attribute");
 		ok(list[0].innerHTML == "factmint.com" && list[1].innerHTML == "chrisscott.org" && list[2].innerHTML == "iugojs.com", "All elements from the list are bound correctly");
 		
 		testCase.websites.reverse();
@@ -133,7 +137,7 @@ window.onload = function() {
 	
 	test('Dot syntax List Binding Test', function() {
 		var list = document.getElementById('dotVariableListTest').children;
-		equal(list.length, 3, "Each element for a list is bound by the data-bind_each attribute");
+		equal(list.length, 3, "Each element for a list is bound by the data-each attribute");
 		equal(list[0].getElementsByTagName("a")[0].getAttribute("href"), "http://lea.verou.me", "The dot syntax works in attributes");
 		equal(list[1].getElementsByTagName("span")[0].innerHTML, "chrisscott.org", "The dot syntax works for binding innerHTML");
 	});
@@ -148,7 +152,7 @@ window.onload = function() {
 		var alex = deepFriendsList[2].children;
 		ok(alex[0].innerHTML == "Alex" && alex[1].innerHTML == "Parkes", "The child nodes with bind keys have been mapped");
 		equal(alex.length, 3, "The variable syntax has been added to the child DOM tree");
-		equal(alex[2].attributes[0].name, "data-bind_key", "A bind key has been added to the variable syntax span");
+		equal(alex[2].attributes[0].name, "data-path", "A bind key has been added to the variable syntax span");
 		equal(alex[2].attributes[0].value, "age", "The bind key has been set successfully from the variable syntax");
 		equal(alex[2].innerHTML, "30", "The variable syntax span has been mapped correctly");
 		
@@ -212,6 +216,17 @@ window.onload = function() {
 		equal(friends[2].children[0].getAttribute("href"), friends[2].children[0].children[0].innerHTML, "After reversing, the attribute bindings match the inner HTML bindings for the third element in list");
 		
 	});
+	
+	asyncTest('HTTP Promise resolution', function() {
+		expect(1);
+		
+		setTimeout(function() {
+			var sport = document.getElementById("http-test").children[0];
+		
+			equal(sport.innerHTML, "golf", "The HTTP request was resolved");
+			start();
+		}, 1000);
+	});
 };
 </script>
 <style>
@@ -223,57 +238,61 @@ window.onload = function() {
 <body>
 	<div id="testView">
 		<span class="bindto-email" id="simpleMemberTest"></span>
-		<span class="bindto-contact" data-bind_key="address.city" id="objectMemberTest"></span>
+		<span class="bindto-contact" data-path="address.city" id="objectMemberTest"></span>
 		<div class="bindto-contact" id="objectFalseTest"></div>
 		<div class="bindto-contact">
-			<span data-bind_key="telephone" id="objectMemberChildElementTest"></span>
-			<span id="variableSyntaxTest">My post code is ${address.postcode}.</span>
-			<span id="variableSyntaxNamespaceTest">In ${work:address.city} the Emergency Serives are on ${work:telephone}</span>
-			<span id="variableSyntaxNamespaceOnlyTest">My name is ${name:}</span>
+			<span data-path="telephone" id="objectMemberChildElementTest"></span>
+			<span id="variableSyntaxTest">My post code is {{address.postcode}}.</span>
+			<span id="variableSyntaxNamespaceTest">In {{work:address.city}} the Emergency Serives are on {{work:telephone}}</span>
+			<span id="variableSyntaxNamespaceOnlyTest">My name is {{name:}}</span>
 		</div>
-		<span id="variableSyntaxDollarTest">price $${price}.</span>
-		<span id="variableSyntaxMessyTest">$${price} $ ${price} } { ${price}</span>
+		<span id="variableSyntaxDollarTest">price ${{price}}.</span>
+		<span id="variableSyntaxMessyTest">${{price}} $ {{price}} } { {{price}}</span>
 		<ul class="bindto-websites" id="simpleListTest">
-			<li data-bind_each></li>
+			<li data-each></li>
 		</ul>
 		<ul class="bindto-blogrole" id="dotVariableListTest">
-			<li data-bind_each>
-				<a href="http://${.}">Go to ${.}</a>
+			<li data-each>
+				<a href="http://{{.}}">Go to {{.}}</a>
 			</li>
 		</ul>
 		<ul class="bindto-friends" id="objectListTest">
-			<li data-bind_each data-bind_key="firstname"></li>
+			<li data-each data-path="firstname"></li>
 		</ul>
 		<ul class="bindto-friends" id="objectDeepListTest">
-			<li data-bind_each>
-				<span data-bind_key="firstname"></span>
-				<span data-bind_key="surname"></span>
-				is ${age} years old
+			<li data-each>
+				<span data-path="firstname"></span>
+				<span data-path="surname"></span>
+				is {{age}} years old
 			</li>
 		</ul>
 		<div class="bindto-interests">
-			<ul data-bind_key="books" id="secondLevelListTest">
-				<li data-bind_each data-bind_key="author"></li>
+			<ul data-path="books" id="secondLevelListTest">
+				<li data-each data-path="author"></li>
 			</ul>
 		</div>
 		<div class="bindto-interests">
-			<ul data-bind_key="books" id="secondLevelDeepListTest">
-				<li data-bind_each>
-					<span data-bind_key="title"></span>
+			<ul data-path="books" id="secondLevelDeepListTest">
+				<li data-each>
+					<span data-path="title"></span>
 				</li>
 			</ul>
 		</div>
-		<div class="bindto-contact" data-country="${address.country}" id="attributeBindTest"></div>
-		<div data-country="${contact:address.country}" id="attributeBindNamespaceTest"></div>
-		<img src="images/${work:name}" id="attributeBindInjectTest"></img>
-		<img data-iugo_alias-src="images/${work:name}" id="attributeBindAliasTest"></img>
-		<div class="bindto-contact" data-location="${address.country} ${work:address.city}" id="attributeMultiBindTest"></div>
-		<div class="bindto-contact" data-city="${address.city}" data-work="${work:name}" id="multiAttributeBindTest"></div>
+		<div class="bindto-contact" data-country="{{address.country}}" id="attributeBindTest"></div>
+		<div data-country="{{contact:address.country}}" id="attributeBindNamespaceTest"></div>
+		<img src="images/{{work:name}}" id="attributeBindInjectTest"></img>
+		<img data-iugo_alias-src="images/{{work:name}}" id="attributeBindAliasTest"></img>
+		<div class="bindto-contact" data-location="{{address.country}} {{work:address.city}}" id="attributeMultiBindTest"></div>
+		<div class="bindto-contact" data-city="{{address.city}}" data-work="{{work:name}}" id="multiAttributeBindTest"></div>
 		<ul class="bindto-friends" id="attributeBindingInListTest">
-			<li data-bind_each>
-				<a href="${firstname}">${firstname}</a>
+			<li data-each>
+				<a href="{{firstname}}">{{firstname}}</a>
 			</li>
 		</ul>
+		
+		<section class="bindto-response" id="http-test">
+			{{sport}}
+		</section>
 	</div>
 	<h1 id="qunit-header">iugo MVVC test coverage</h1>  
 	<h2 id="qunit-banner"></h2>  
