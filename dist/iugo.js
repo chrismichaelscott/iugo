@@ -1,3 +1,9 @@
+// ==ClosureCompiler==
+// @compilation_level SIMPLE_OPTIMIZATIONS
+// @output_file_name default.js
+// @language ECMASCRIPT5
+// ==/ClosureCompiler==
+
 /**
  * Author Chris Scott <chris.scott@factmint.com>
  * Delivered with and licensed under the MIT licence
@@ -14,7 +20,7 @@ $iugo.$internals.registerModelMember = function(obj, prop) {
         	return this.$[prop];
         },
         set: function(value) {
-        	if (value instanceof Promise) {
+        	if (window['Promise'] && value instanceof Promise) {
         		value.then(function(result) {
         			obj[prop] = result;
         		});
@@ -245,8 +251,21 @@ $iugo["initializers"] = $iugo.$internals.MVVC.prototype.initializers;
 window["Iugo"] = function(model, scope) {
     return new $iugo.$internals.MVVC(model, scope);
 };
+// ==ClosureCompiler==
+// @compilation_level ADVANCED_OPTIMIZATIONS
+// @output_file_name default.js
+// @language ECMASCRIPT5
+// ==/ClosureCompiler==
 
+/** 
+ * Note on minification: 
+ *	the plugin name ("bind_to_dom") can be replaced by an abbreviation ("BD", for example) by find-and-replace, post compile
+ */
 
+/**
+ * Author Chris Scott <chris.scott@factmint.com>
+ * Delivered with and licensed under the MIT licence
+ */
 // This initializer swaps ${var} for <spans> with attributes for use with the VC below
 $iugo['initializers'].push(function(mvvc) {
 	mvvc.store.tags = {};
@@ -489,7 +508,6 @@ $iugo['defaultViewcontrollers'].push(function(property, value, scope, store) {
 	}
 });
 
-
 // This initializer sets up event listening
 $iugo['initializers'].push(function(mvvc) {
 	
@@ -512,8 +530,19 @@ function getRealEvent(name) {
 	return 'on' + name;
 }
 
-function getPathFromSplit(eventPath, fork) {
+function nodeToPath(node) {
+	var path = [];
+	for (; node; node = node.parentNode) {
+		path.push(node);
+	}
+	
+	return path;
+}
+
+function getPathFromSplit(main, fork) {
 	var path = null;
+	
+	var eventPath = nodeToPath(main);
 	
 	for (; fork; fork = fork.parentNode) {
 		for (var eventPathIndex = 0; eventPathIndex < eventPath.length; eventPathIndex++) {
@@ -538,14 +567,12 @@ function passEventToController(eventName, mvvc, bubble) {
 	return function(event) {
 
 		var path = null;
-		if (eventName == 'hoverin') {
-			path = getPathFromSplit(event.path, event.fromElement);
-		} else if (eventName == 'hoverout') {
-			path = getPathFromSplit(event.path, event.toElement);
+		if (eventName == 'hoverin' || eventName == 'hoverout') {
+			path = getPathFromSplit(event.target, event.relatedTarget);
 		} else if (eventName == 'click') {
-			path = event.path;
+			path = (event.path) ? event.path : nodeToPath(event.target);
 		} else {
-			path = [event.path[0]];
+			path = event.target;
 		}
 		
 		if (path) for (var pathIndex = 0; pathIndex < path.length; pathIndex++) {
@@ -565,41 +592,43 @@ function passEventToController(eventName, mvvc, bubble) {
 		return true;
 	};
 }
-
-
 window["Iugo"]["http"] = {
 	get: function(url, processor, username, password) {
 		return this.xhr('get', url, undefined, {}, username, password);
 	},
 	xhr: function(method, url, body, processor, headers, username, password) {
-		return new Promise(function(resolve, reject) {
-			var request = new XMLHttpRequest();
-			request.onload = function() {
-				if (this.status >= 200 && this.status < 300) {
-					if (processor instanceof Function) {
-						resolve(processor(this.responseText));
-					} else if (this.getResponseHeader('content-type')) {
-						resolve(JSON.parse(this.responseText));	
+		if (window['Promise']) {
+			return new Promise(function(resolve, reject) {
+				var request = new XMLHttpRequest();
+				request.onload = function() {
+					if (this.status >= 200 && this.status < 300) {
+						if (processor instanceof Function) {
+							resolve(processor(this.responseText));
+						} else if (this.getResponseHeader('content-type')) {
+							resolve(JSON.parse(this.responseText));	
+						} else {
+							resolve(this.responseText);
+						}
 					} else {
-						resolve(this.responseText);
+						reject(this);
 					}
-				} else {
+				};
+				request.onerror = request.onabort = function() {
 					reject(this);
+				};
+				
+				request.open(method, url, true, username, password);
+				
+				for (var header in headers) {
+					if (headers.hasOwnProperty(header)) {
+						request.setRequestHeader(header, headers[header]);
+					}
 				}
-			};
-			request.onerror = request.onabort = function() {
-				reject(this);
-			};
-			
-			request.open(method, url, true, username, password);
-			
-			for (var header in headers) {
-				if (headers.hasOwnProperty(header)) {
-					request.setRequestHeader(header, headers[header]);
-				}
-			}
-			
-			request.send(body);
-		});
+				
+				request.send(body);
+			});
+		} else {
+			console.log('To use the HTTP extension, load a Promise polyfill')
+		}
 	}
 }
