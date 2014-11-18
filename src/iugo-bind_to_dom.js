@@ -19,14 +19,12 @@ $iugo['initializers'].push(function(mvvc) {
 	mvvc.store.namespacedTagIndex = {};
 	mvvc.store.idCounter = 0;
 	
-	var innerHTMLRegex = /(>[^<]*)\{\{([^:.}<]+:)?([^}<]*)\}\}([^<]*<)/g;
+	var innerHTMLRegex = /(>[^<]*)\{\{([^}<]*)\}\}([^<]*<)/g;
 	// it is important to repeat the regex as it will only match one ${var} per tag innerHTML
 	while (mvvc.scope.innerHTML.match(innerHTMLRegex)) {
-		mvvc.scope.innerHTML = mvvc.scope.innerHTML.replace(innerHTMLRegex, function(m, before, namespace, address, after) {
+		mvvc.scope.innerHTML = mvvc.scope.innerHTML.replace(innerHTMLRegex, function(m, before, address, after) {
 			var replacement = before + '<span ';
-			if (namespace) {
-				replacement += 'class="bindto-' + namespace.substr(0, (namespace.length - 1)) + '" ';
-			}
+			
 			replacement += 'data-path="' + address + '"></span>' + after;
 			
 			return replacement;
@@ -77,21 +75,22 @@ $iugo['initializers'].push(function(mvvc) {
 		return tag;
 	});
 });
-// This VC binds values to the DOM tree, when a class "bindto-property" is applied
-$iugo['defaultViewcontrollers'].push(function(property, value, scope, store) {
+
+// This VC binds values to the DOM tree, when a "data-path" property is applied
+$iugo['defaultViewcontrollers'].push(function(mvvc, change) {
 	var attributeRegex = /\{\{([^:}]+:)?([^}]+)\}\}/g;
 	
 	function compileTagAttributes(tagId) {
 		var tag = document.querySelector('[data-iugo_id="' + tagId + '"]');
 		
-		var attributes = store.tags[tagId].bindAttributes;
+		var attributes = mvvc.store.tags[tagId].bindAttributes;
 		
 		for (var x = 0; x < attributes.length; x++) {
-			var template = store.tags[tagId].attributeTemplates[attributes[x]];
+			var template = mvvc.store.tags[tagId].attributeTemplates[attributes[x]];
 			
 			var compiledAttribute = template.replace(attributeRegex, function(match) {
-				return (store.tags[tagId].replacements[match]) ?
-					store.tags[tagId].replacements[match] :
+				return (mvvc.store.tags[tagId].replacements[match]) ?
+					mvvc.store.tags[tagId].replacements[match] :
 					"";
 			});
 			
@@ -99,29 +98,36 @@ $iugo['defaultViewcontrollers'].push(function(property, value, scope, store) {
 		}
 	}
 	
-	function updateTagReplacements(value, node, property) {
+	function updateTagReplacements(value, node) {
 		if (node.hasAttribute('data-iugo_id')) {
 			var tagId = node.getAttribute('data-iugo_id');
 			
-			var updateTagIndex = function(match, namespace, address) {			
-				if ((!namespace && !property) || (namespace && namespace.substr(0, namespace.length - 1) == property)) {
-					var source = address.split('.');
-					var workingValue = value;
-					for (var x = 0; x < source.length; x++) {
-						if (source[x] === "") continue;
-						
-						workingValue = workingValue[source[x]];
-					}
-					store.tags[tagId].replacements[match] = workingValue;
+			var updateTagIndex = function(match, namespace, address) {
+				var workingValue = null;
+				if (namespace) {
+					workingValue = mvvc.model[namespace.substr(0, namespace.length - 1)];
+				} else {
+					workingValue = value;
 				}
+				
+				var source = address.split('.');
+				for (var x = 0; x < source.length; x++) {
+					if (source[x] === "") continue;
+					if (workingValue[source[x]]) {
+						workingValue = workingValue[source[x]];
+					} else {
+						throw 'bad bind address';
+					}
+				}
+				mvvc.store.tags[tagId].replacements[match] = workingValue;
 			};
 	
-			var attributes = store.tags[tagId].bindAttributes;
+			var attributes = mvvc.store.tags[tagId].bindAttributes;
 			for (var x = 0; x < attributes.length; x++) {
 				var attribute = attributes[x];
 				
 				// Add the variables to the store with their latest values
-				var template = store.tags[tagId].attributeTemplates[attribute];
+				var template = mvvc.store.tags[tagId].attributeTemplates[attribute];
 				template.replace(attributeRegex, updateTagIndex);
 			}
 			
@@ -131,10 +137,10 @@ $iugo['defaultViewcontrollers'].push(function(property, value, scope, store) {
 	
 	function cloneTagIndex(node) {
 		var oldId = node.getAttribute("data-iugo_id");
-		var newId = store.idCounter++;
+		var newId = mvvc.store.idCounter++;
 		
-		var oldIndex = store.tags[oldId];
-		store.tags[newId] = {
+		var oldIndex = mvvc.store.tags[oldId];
+		mvvc.store.tags[newId] = {
 			bindAttributes: oldIndex.bindAttributes,
 			attributeTemplates: oldIndex.attributeTemplates,
 			replacements: {}
@@ -150,7 +156,43 @@ $iugo['defaultViewcontrollers'].push(function(property, value, scope, store) {
 	 * The path argument tracks the deep recursion and is used to fill relative addresses
 	 */
 	function process(value, node, path) {
-		// Update the replacements for a tag marked with an iugo_id
+		
+		// Is the node bound to the model?
+		var bindKey = node.getAttribute('data-path');
+		
+		if (bindKey) {
+			var namespaceEnd = bindKey.indexOf(':');
+			if (namespaceEnd > 0) {
+				value = mvvc.model[bindKey.substr(0, namespaceEnd)];
+				bindKey = bindKey.substr(namespaceEnd + 1);
+			}
+		
+			try {
+				bindKey.split('.').forEach(function(addressSegment) {
+					if (addressSegment !== '') {
+						if (value[addressSegment]) {
+							value = value[addressSegment];
+						} else {
+							throw 'bad bind address';
+						}
+					}
+				});
+			} catch (exception) {
+				return;
+			}
+		}
+		
+		var condition = node.getAttribute('data-if');
+		if (condition) {
+			var test = mvvc.controller[condition];
+			if (test && test instanceof Function) {
+				if (! test.call(node, value, mvvc)) {
+					node.style.display = 'none';
+					return;
+				}
+			}
+		}
+		
 		updateTagReplacements(value, node);
 		
 		// Recurse the DOM looking for substitutions
@@ -197,27 +239,7 @@ $iugo['defaultViewcontrollers'].push(function(property, value, scope, store) {
 					} else {
 						duplicateElement = elementView;
 					}
-					process(value[y], duplicateElement);
-				}
-			}
-		} else if (value instanceof Object) {
-			var bindKey = node.getAttribute('data-path');
-			if (bindKey != null && bindKey !== "") {
-				if (path == null) {
-					path = "";
-				} else {
-					path += ".";
-				}
-				var nextPath = bindKey.slice(path.length).split('.')[0];
-				
-				process(value[nextPath], node, path + nextPath);
-			} else {
-				for (var x = 0; x < node.children.length; x++) {
-					// it is possible to use a bindto-XXX class in a sub-element of an already bound element
-					// in that case we want to skip the DOM descent from the parent and wait until the child has its own binding iteration
-					if (! node.children[x].className.match("bindto-")) {
-						process(value, node.children[x], path);
-					}
+					process(value[y], duplicateElement, path);
 				}
 			}
 		} else {
@@ -225,7 +247,7 @@ $iugo['defaultViewcontrollers'].push(function(property, value, scope, store) {
 				for (var x = 0; x < node.children.length; x++) {
 					process(value, node.children[x], path);
 				}
-			} else {
+			} else if (! (value instanceof Object)) {
 				if (node.tagName == "INPUT") {
 					node.value = value;
 				} else {
@@ -235,22 +257,17 @@ $iugo['defaultViewcontrollers'].push(function(property, value, scope, store) {
 		}
 	}
 	
-	// Look for elements with a generated iugo id for processing
-	if (store.namespacedTagIndex[property]) {
-		var idList = store.namespacedTagIndex[property];
-		for (var x = 0; x < idList.length; x++) {
-			var elements = scope.querySelectorAll('[data-iugo_id="' + idList[x] + '"]');
-			
-			for (var y = 0; y < elements.length; y++ ) {
-				// Update the replacements for a tag marked with an iugo_id
-				updateTagReplacements(value, elements[y], property);
+	process(mvvc.model, mvvc.scope, '');
+	
+	/**
+	var elementsToProcess = scope.querySelectorAll('[data-path]');
+	for (var elementIndex = 0; elementIndex < elementsToProcess.length; elementIndex++) {
+		if (elementsToProcess[elementIndex].getAttribute('data-path').substring(0, property.length) == property) {
+			try {
+				process(value, elementsToProcess[elementIndex], property, true);
+			} catch (exception) {
+				console.log('ERROR: ' + exception);
 			}
 		}
-	}
-	
-	// Look for elements with a bindto-XXX class for processing
-	var boundNodes = scope.getElementsByClassName("bindto-" + property);
-	for (var x = 0; x < boundNodes.length; x++ ) {
-		process(value, boundNodes[x]);
-	}
+	}*/
 });

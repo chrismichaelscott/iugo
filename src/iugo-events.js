@@ -74,7 +74,7 @@ function passEventToController(eventName, mvvc, bubble) {
 			
 			var handler = target.getAttribute('data-' + eventName);
 			if (handler && mvvc.controller[handler] instanceof Function) {
-				mvvc.controller[handler].call(target, mvvc, event);
+				mvvc.controller[handler].call(target, event, mvvc);
 				return false;
 			}
 		}

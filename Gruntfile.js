@@ -48,7 +48,6 @@ module.exports = function(grunt) {
 					'dist/iugo.min.js': 'dist/iugo.js'
 				},
 				options: {
-					//compilation_level: 'ADVANCED_OPTIMIZATIONS',
 					language_in: 'ECMASCRIPT5_STRICT',
 					banner: '/* copyright Factmint Ltd 2014, Licence MIT, author chris.scott@factmint.com */'
 				}

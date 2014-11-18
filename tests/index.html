@@ -52,10 +52,22 @@ window.onload = function() {
 	
 	document.getElementById("testView"));
 	
+	testCase.controller = {
+		failCondition: function() {
+			return false;
+		},
+		successCondition: function() {
+			return true;
+		},
+		isItFactmint: function(value) {
+			return (value == 'FactMint');
+		}
+	}
+	
 	test('Simple Member Test', function() {
 		var email = document.getElementById('simpleMemberTest');
 		equal(email.innerHTML, "chris@factmint.com", "Simple Member bound by class");
-		testCase.email = "chris.scott@factmint.com";
+		testCase.model.email = "chris.scott@factmint.com";
 		equal(email.innerHTML, "chris.scott@factmint.com", "Updates to the model are reflected in the DOM");
 	});
 	
@@ -80,7 +92,7 @@ window.onload = function() {
 		
 		var workCity = document.getElementById('variableSyntaxNamespaceTest').children[0];
 		ok(workCity, "Namespaced variables are substituted for nodes");
-		ok(workCity.className.match("bindto-work"), "The namespaced variable's span is bound to a top-level model");
+		equal(workCity.getAttribute('data-path'), 'work:address.city', "The namespaced variable's span is bound to a top-level model");
 		equal(workCity.innerHTML, "New York", "The namespaces variable span tag is bound to a member");
 		
 		var workTelephone = document.getElementById('variableSyntaxNamespaceTest').children[1];
@@ -107,32 +119,32 @@ window.onload = function() {
 		equal(list.length, 3, "Each element for a list is bound by the data-each attribute");
 		ok(list[0].innerHTML == "factmint.com" && list[1].innerHTML == "chrisscott.org" && list[2].innerHTML == "iugojs.com", "All elements from the list are bound correctly");
 		
-		testCase.websites.reverse();
+		testCase.model.websites.reverse();
 		var list = document.getElementById('simpleListTest').children;
 		ok(list[0].innerHTML == "iugojs.com" && list[1].innerHTML == "chrisscott.org" && list[2].innerHTML == "factmint.com", "All elements from the list are bound correctly after the array is reversed");
 		
-		testCase.websites.push("foodyfare.com");
+		testCase.model.websites.push("foodyfare.com");
 		var list = document.getElementById('simpleListTest').children;
 		equal(list.length, 4, "Elements can be pushed onto the array in the model");
 		equal(list[3].innerHTML, "foodyfare.com", "Changes to the array are mapped to the DOM");
 		
-		testCase.websites.sort();
+		testCase.model.websites.sort();
 		var list = document.getElementById('simpleListTest').children;
 		ok(list[0].innerHTML == "chrisscott.org" && list[1].innerHTML == "factmint.com" && list[2].innerHTML == "foodyfare.com" && list[3].innerHTML == "iugojs.com", "All elements from the list are bound correctly after the array is sorted");
 		
-		testCase.websites.splice(1, 2, "google.com");
+		testCase.model.websites.splice(1, 2, "google.com");
 		var list = document.getElementById('simpleListTest').children;
 		ok(list[0].innerHTML == "chrisscott.org" && list[1].innerHTML == "google.com" && list[2].innerHTML == "iugojs.com", "All elements from the list are bound correctly after the array is spliced");
 		
-		testCase.websites.unshift("factmint.com");
+		testCase.model.websites.unshift("factmint.com");
 		var list = document.getElementById('simpleListTest').children;
 		ok(list[0].innerHTML == "factmint.com" && list[1].innerHTML == "chrisscott.org" && list[2].innerHTML == "google.com" && list[3].innerHTML == "iugojs.com", "All elements from the list are bound correctly after an element is unshifted");
 		
-		testCase.websites.pop();
+		testCase.model.websites.pop();
 		var list = document.getElementById('simpleListTest').children;
 		ok(list[0].innerHTML == "factmint.com" && list[1].innerHTML == "chrisscott.org" && list[2].innerHTML == "google.com", "All elements from the list are bound correctly after an element is popped");
 		
-		testCase.websites.shift();
+		testCase.model.websites.shift();
 		var list = document.getElementById('simpleListTest').children;
 		ok(list[0].innerHTML == "chrisscott.org" && list[1].innerHTML == "google.com", "All elements from the list are bound correctly after an element is shifted");
 	});
@@ -158,7 +170,7 @@ window.onload = function() {
 		equal(alex[2].attributes[0].value, "age", "The bind key has been set successfully from the variable syntax");
 		equal(alex[2].innerHTML, "30", "The variable syntax span has been mapped correctly");
 		
-		testCase.friends.reverse();
+		testCase.model.friends.reverse();
 		var euan = deepFriendsList[2].children;
 		ok(euan[0].innerHTML == "Euan" && euan[1].innerHTML == "Holloway", "After reversing, the child nodes with bind keys have been mapped");
 		equal(euan.length, 3, "After reversing, the variable syntax has been added to the child DOM tree");
@@ -195,7 +207,7 @@ window.onload = function() {
 		ok(city == "London" && work == "FactMint", "Multiple attributes are processed within one tag");
 		
 		// Update the model to check the changes are reflected
-		testCase.work.name = "FactMint Ltd";
+		testCase.model.work.name = "FactMint Ltd";
 		
 		work = document.getElementById('multiAttributeBindTest').getAttribute('data-work');
 		equal(work, "FactMint Ltd", "Updates to the model are reflected in attributes with variables");
@@ -211,12 +223,21 @@ window.onload = function() {
 		equal(friends[1].children[0].getAttribute("href"), friends[1].children[0].children[0].innerHTML, "The attribute bindings match the inner HTML bindings for the second element in list");
 		equal(friends[2].children[0].getAttribute("href"), friends[2].children[0].children[0].innerHTML, "The attribute bindings match the inner HTML bindings for the third element in list");
 		
-		testCase.friends.reverse();
+		testCase.model.friends.reverse();
 		
 		equal(friends[0].children[0].getAttribute("href"), friends[0].children[0].children[0].innerHTML, "After reversing, the attribute bindings match the inner HTML bindings for the first element in list");
 		equal(friends[1].children[0].getAttribute("href"), friends[1].children[0].children[0].innerHTML, "After reversing, the attribute bindings match the inner HTML bindings for the second element in list");
 		equal(friends[2].children[0].getAttribute("href"), friends[2].children[0].children[0].innerHTML, "After reversing, the attribute bindings match the inner HTML bindings for the third element in list");
 		
+	});
+	
+	test('Conditional DOM', function() {
+		var nodes = document.getElementById('condition-test').children;
+		equal(nodes[0].getAttribute('style'), 'display: none', 'the test was false');
+		notEqual(nodes[1].getAttribute('style'), 'display: none', 'the test was true');
+
+		notEqual(nodes[2].style.display, 'none', 'the test was true, as the value was "FactMint"');
+		equal(nodes[3].style.display, 'none', 'the test was false, as the value was not "FactMint"');
 	});
 	
 	asyncTest('HTTP Promise resolution', function() {
@@ -239,10 +260,10 @@ window.onload = function() {
 </head>
 <body>
 	<div id="testView">
-		<span class="bindto-email" id="simpleMemberTest"></span>
-		<span class="bindto-contact" data-path="address.city" id="objectMemberTest"></span>
-		<div class="bindto-contact" id="objectFalseTest"></div>
-		<div class="bindto-contact">
+		<span data-path="email" id="simpleMemberTest"></span>
+		<span data-path="contact.address.city" id="objectMemberTest"></span>
+		<div data-path="contact" id="objectFalseTest"></div>
+		<div data-path="contact">
 			<span data-path="telephone" id="objectMemberChildElementTest"></span>
 			<span id="variableSyntaxTest">My post code is {{address.postcode}}.</span>
 			<span id="variableSyntaxNamespaceTest">In {{work:address.city}} the Emergency Serives are on {{work:telephone}}</span>
@@ -250,50 +271,57 @@ window.onload = function() {
 		</div>
 		<span id="variableSyntaxDollarTest">price ${{price}}.</span>
 		<span id="variableSyntaxMessyTest">${{price}} $ {{price}} } { {{price}}</span>
-		<ul class="bindto-websites" id="simpleListTest">
+		<ul data-path="websites" id="simpleListTest">
 			<li data-each></li>
 		</ul>
-		<ul class="bindto-blogrole" id="dotVariableListTest">
+		<ul data-path="blogrole" id="dotVariableListTest">
 			<li data-each>
 				<a href="http://{{.}}">Go to {{.}}</a>
 			</li>
 		</ul>
-		<ul class="bindto-friends" id="objectListTest">
+		<ul data-path="friends" id="objectListTest">
 			<li data-each data-path="firstname"></li>
 		</ul>
-		<ul class="bindto-friends" id="objectDeepListTest">
+		<ul data-path="friends" id="objectDeepListTest">
 			<li data-each>
 				<span data-path="firstname"></span>
 				<span data-path="surname"></span>
 				is {{age}} years old
 			</li>
 		</ul>
-		<div class="bindto-interests">
+		<div data-path="interests">
 			<ul data-path="books" id="secondLevelListTest">
 				<li data-each data-path="author"></li>
 			</ul>
 		</div>
-		<div class="bindto-interests">
+		<div data-path="interests">
 			<ul data-path="books" id="secondLevelDeepListTest">
 				<li data-each>
 					<span data-path="title"></span>
 				</li>
 			</ul>
 		</div>
-		<div class="bindto-contact" data-country="{{address.country}}" id="attributeBindTest"></div>
+		<div data-path="contact" data-country="{{address.country}}" id="attributeBindTest"></div>
 		<div data-country="{{contact:address.country}}" id="attributeBindNamespaceTest"></div>
 		<img src="images/{{work:name}}" id="attributeBindInjectTest"></img>
 		<img data-iugo_alias-src="images/{{work:name}}" id="attributeBindAliasTest"></img>
-		<div class="bindto-contact" data-location="{{address.country}} {{work:address.city}}" id="attributeMultiBindTest"></div>
-		<div class="bindto-contact" data-city="{{address.city}}" data-work="{{work:name}}" id="multiAttributeBindTest"></div>
-		<ul class="bindto-friends" id="attributeBindingInListTest">
+		<div data-path="contact" data-location="{{address.country}} {{work:address.city}}" id="attributeMultiBindTest"></div>
+		<div data-path="contact" data-city="{{address.city}}" data-work="{{work:name}}" id="multiAttributeBindTest"></div>
+		<ul data-path="friends" id="attributeBindingInListTest">
 			<li data-each>
 				<a href="{{firstname}}">{{firstname}}</a>
 			</li>
 		</ul>
 		
-		<section class="bindto-response" id="http-test">
+		<section data-path="response" id="http-test">
 			{{sport}}
+		</section>
+		
+		<section data-path="work" id="condition-test">
+			<div data-if="failCondition">no</div>
+			<div data-if="successCondition">yes</div>
+			<div data-path="name" data-if="isItFactmint">yes</div>
+			<div data-path="telephone" data-if="isItFactmint">yes</div>
 		</section>
 	</div>
 	<h1 id="qunit-header">iugo MVVC test coverage</h1>  

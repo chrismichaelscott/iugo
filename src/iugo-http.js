@@ -10,7 +10,7 @@ window["Iugo"]["http"] = {
 					if (this.status >= 200 && this.status < 300) {
 						if (processor instanceof Function) {
 							resolve(processor(this.responseText));
-						} else if (this.getResponseHeader('content-type')) {
+						} else if (this.getResponseHeader('content-type') == "application/json") {
 							resolve(JSON.parse(this.responseText));	
 						} else {
 							resolve(this.responseText);

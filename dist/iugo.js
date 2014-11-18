@@ -10,81 +10,54 @@
  */
 window['$iugo'] = {};
 $iugo.$internals = {};
-/** Apply top level getter and setter to each member of the model
- * This is different from the deep getters/setters in that it triggers a refresh of the view
- * The view must be refreshed at this level only as the viewcontrollers may use other parts of the model in calculations
- */
-$iugo.$internals.registerModelMember = function(obj, prop) {
-    Object.defineProperty(obj, prop, {
-        get: function() {
-        	return this.$[prop];
-        },
-        set: function(value) {
-        	if (window['Promise'] && value instanceof Promise) {
-        		value.then(function(result) {
-        			obj[prop] = result;
-        		});
-        	} else {
-	        	this.updateView(prop, value);
-				this.$[prop] = value;
-				$iugo.$internals.applySetters(value, this, [prop], value);	
-        	}
-        }
-    });
+
+$iugo.$internals.applyDeepGettersAndSetters = function(value, mvvc, path) {
+	if (value instanceof Object || value instanceof Array) {
+		for (var childProperty in value) {
+			if (value.hasOwnProperty(childProperty)) {
+				$iugo.$internals.applySetters(mvvc, value, childProperty, path.concat([childProperty]));
+			}
+		}
+	}
+	if (value instanceof Array) {
+		$iugo.$internals.registerArray(value, mvvc, path);
+	}
 };
+
+
+$iugo.$internals.setValue = function(value, mvvc, path, parent, property) {
+	if (window['Promise'] && value instanceof Promise) {
+		value.then(function(result) {
+			parent[property] = result;
+		});
+	} else {
+		mvvc.$[path.join('.')] = value;
+		
+		$iugo.$internals.applyDeepGettersAndSetters(value, mvvc, path);
+	}
+};
+
+
 /**
  * Apply traverse the model looking for members to apply setters to
  * the setters are applied in a different method in order to create a closure
  */
-$iugo.$internals.applySetters = function(obj, mvvc, props, modelMember) {
-	if (obj instanceof Object || obj instanceof Array) {
-		for (var nextLevelField in obj) {
-			$iugo.$internals.registerProperty(obj, nextLevelField, mvvc, props)
-			var newProps = props.concat([nextLevelField]);
-			$iugo.$internals.applySetters(obj[nextLevelField], mvvc, newProps, modelMember);
-		}
+$iugo.$internals.applySetters = function(mvvc, object, property, path) {
+	
+	$iugo.$internals.setValue(object[property], mvvc, path, object, property);
+	
+	Object.defineProperty(object, property, {
+		get: function() {
+			return mvvc.$[path.join('.')];
+		},
+		set: function(value) {
+			$iugo.$internals.setValue(value, mvvc, path, object, property);
 		
-		if (obj instanceof Array) {
-			// override push and pop variants
-			$iugo.$internals.registerArray(obj, mvvc, props);
+			mvvc.updateView();
 		}
-	}
+	});
 };
-/**
- * Apply a getter and setter to a deep property
- * a reference to the original mvvc object and the path to the current level in that object are always maintained
- * this allows the method to retrieve the original value from the "Dollar" field and to trigger an update on the mvvc object
- */
-$iugo.$internals.registerProperty = function(obj, field, mvvc, path) {
-	mvvc.$[path.concat([field]).join('.')] = obj[field];
-	Object.defineProperty(obj, field, {
-        get: function() {
-            return mvvc.$[path.concat([field]).join('.')];
-        },
-        set: function(value) {
-            mvvc.$[path.concat([field]).join('.')] = value;
-            // Recurse children and set them too
-            $iugo.$internals.setChildMembers(obj, mvvc, path);
-            
-            // as the setter is already defined we can just update the view
-            // as opposed to pushing to an array where a reset of the model member is required
-            // NB. if this were a full update (mvvc[path[0]] = mvvc[path[0]]) an infinite loop would be generated when pushing to an array
-            mvvc.updateView(path[0], mvvc[path[0]]);
-        }
-    })
-};
-/**
- *
- */
-$iugo.$internals.setChildMembers = function(obj, mvvc, path) {
-	if (obj instanceof Object || obj instanceof Array) {
-		for (var x in obj) {
-			var newPath = path.concat([x]);
-			mvvc.$[newPath.join('.')] = obj[x];
-			$iugo.$internals.setChildMembers(obj[x], mvvc, newPath);
-		}
-	}
-};
+
 /**
  * The array itself already has a setter (so changing it for another array will update the view)
  * however the element arr[n+1] will not have a setter to adding a new element will not trigger an update to the view
@@ -94,13 +67,13 @@ $iugo.$internals.registerArray = function(arr, mvvc, path) {
 	// Override the default mutating array methods to trigger model updates after mutation
 	arr.push = function() {
 		var retVal = Array.prototype.push.apply(this, arguments);
-		mvvc[path[0]] = mvvc[path[0]];
+		mvvc.model[path[0]] = mvvc.model[path[0]];
 		return retVal;
 	}
 	arr.pop = function() {
 		// The return value must be cloned or it will be linked to arr[n] - which will change after the pop
 		var retVal = $iugo.$internals.clone(Array.prototype.pop.call(arr));
-		mvvc[path[0]] = mvvc[path[0]];
+		mvvc.model[path[0]] = mvvc.model[path[0]];
 		return retVal;
 	}
 	arr.unshift = function() {
@@ -113,13 +86,13 @@ $iugo.$internals.registerArray = function(arr, mvvc, path) {
 		for (var x = 0; x < holdingArray.length; x++) {
 			this[index++] = holdingArray[x];
 		}
-		mvvc[path[0]] = mvvc[path[0]];
+		mvvc.model[path[0]] = mvvc.model[path[0]];
 		return this.length;
 	}
 	arr.shift = function() {
 		// The return value must be cloned or it will be linked to arr[0] - which will change after the shift
 		var retVal = $iugo.$internals.clone(Array.prototype.shift.call(this));
-		mvvc[path[0]] = mvvc[path[0]];
+		mvvc.model[path[0]] = mvvc.model[path[0]];
 		return retVal;
 	}
 	arr.reverse = function() {
@@ -128,6 +101,7 @@ $iugo.$internals.registerArray = function(arr, mvvc, path) {
 		for (var x = 0; x < this.length; x++) {
 			this[x] = holdingArray[this.length - 1 - x];
 		}
+		mvvc.model[path[0]] = mvvc.model[path[0]];
 		return this;
 	}
 	arr.sort = function() {
@@ -137,6 +111,7 @@ $iugo.$internals.registerArray = function(arr, mvvc, path) {
 		for (var x = 0; x < this.length; x++) {
 			this[x] = holdingArray[x];
 		}
+		mvvc.model[path[0]] = mvvc.model[path[0]];
 		return this;
 	}
 	arr.splice = function() {
@@ -155,10 +130,12 @@ $iugo.$internals.registerArray = function(arr, mvvc, path) {
 		for (var x = index; x < holdingArray.length; x++) {
 			this.pop();
 		}
-		mvvc[path[0]] = mvvc[path[0]];
+		mvvc.model[path[0]] = mvvc.model[path[0]];
 		return this;
 	}
 };
+
+
 /**
  * A simple deep clone method.
  * There are multiple cases where using an object by reference causes infinite recursion due to the setters
@@ -178,6 +155,8 @@ $iugo.$internals.clone = function(obj) {
 	}
 	return clone;
 };
+
+
 /**
  * Main MVVC constructor
  * NB. this is aliased by the Iugo Function
@@ -198,21 +177,23 @@ $iugo.$internals.MVVC = function(model, scope) {
     // The "Dollar" field holds references to all members and sub-members of the model, without any getters or setters
     this.$ = {};
 	// Lastly set the model
-	for (var member in model) {
-        $iugo.$internals.registerModelMember(this, member);
-        this[member] = model[member];
-    }
+	$iugo.$internals.applySetters(this, this, 'model', []);
+	this.model = model;
+	
+	this.updateView();
 };
+
+
 $iugo.$internals.MVVC.prototype = {
     // Trigger the view to update
-    updateView: function(prop, value) {
+    updateView: function() {
 		for (var x = 0; x < this.defaultViewcontrollers.length; x++) {
 			if (this.defaultViewcontrollers[x] instanceof Function) {
-				this.defaultViewcontrollers[x](prop, value, this.scope, this.store);
+				this.defaultViewcontrollers[x](this.model, this.scope, this.store);
 			}
 		}
-		if (typeof(this.viewcontroller[prop]) !== 'undefined' && this.viewcontroller[prop] instanceof Function) {
-			this.viewcontroller[prop](value, this.scope, this.store);
+		if (typeof(this.viewcontroller) !== 'undefined' && this.viewcontroller instanceof Function) {
+			this.viewcontroller(this.model, this.scope, this.store);
 		}
     },
     
@@ -221,9 +202,12 @@ $iugo.$internals.MVVC.prototype = {
     "initializers": []
 };
 
+
 // Make the API available to plugins
 $iugo["defaultViewcontrollers"] = $iugo.$internals.MVVC.prototype.defaultViewcontrollers;
 $iugo["initializers"] = $iugo.$internals.MVVC.prototype.initializers;
+
+
 /*
  * This is the "public" view on the framework
  *
@@ -272,14 +256,12 @@ $iugo['initializers'].push(function(mvvc) {
 	mvvc.store.namespacedTagIndex = {};
 	mvvc.store.idCounter = 0;
 	
-	var innerHTMLRegex = /(>[^<]*)\{\{([^:.}<]+:)?([^}<]*)\}\}([^<]*<)/g;
+	var innerHTMLRegex = /(>[^<]*)\{\{([^}<]*)\}\}([^<]*<)/g;
 	// it is important to repeat the regex as it will only match one ${var} per tag innerHTML
 	while (mvvc.scope.innerHTML.match(innerHTMLRegex)) {
-		mvvc.scope.innerHTML = mvvc.scope.innerHTML.replace(innerHTMLRegex, function(m, before, namespace, address, after) {
+		mvvc.scope.innerHTML = mvvc.scope.innerHTML.replace(innerHTMLRegex, function(m, before, address, after) {
 			var replacement = before + '<span ';
-			if (namespace) {
-				replacement += 'class="bindto-' + namespace.substr(0, (namespace.length - 1)) + '" ';
-			}
+			
 			replacement += 'data-path="' + address + '"></span>' + after;
 			
 			return replacement;
@@ -330,8 +312,9 @@ $iugo['initializers'].push(function(mvvc) {
 		return tag;
 	});
 });
-// This VC binds values to the DOM tree, when a class "bindto-property" is applied
-$iugo['defaultViewcontrollers'].push(function(property, value, scope, store) {
+
+// This VC binds values to the DOM tree, when a "data-path" property is applied
+$iugo['defaultViewcontrollers'].push(function(model, scope, store, change) {
 	var attributeRegex = /\{\{([^:}]+:)?([^}]+)\}\}/g;
 	
 	function compileTagAttributes(tagId) {
@@ -352,21 +335,28 @@ $iugo['defaultViewcontrollers'].push(function(property, value, scope, store) {
 		}
 	}
 	
-	function updateTagReplacements(value, node, property) {
+	function updateTagReplacements(value, node) {
 		if (node.hasAttribute('data-iugo_id')) {
 			var tagId = node.getAttribute('data-iugo_id');
 			
-			var updateTagIndex = function(match, namespace, address) {			
-				if ((!namespace && !property) || (namespace && namespace.substr(0, namespace.length - 1) == property)) {
-					var source = address.split('.');
-					var workingValue = value;
-					for (var x = 0; x < source.length; x++) {
-						if (source[x] === "") continue;
-						
-						workingValue = workingValue[source[x]];
-					}
-					store.tags[tagId].replacements[match] = workingValue;
+			var updateTagIndex = function(match, namespace, address) {
+				var workingValue = null;
+				if (namespace) {
+					workingValue = model[namespace.substr(0, namespace.length - 1)];
+				} else {
+					workingValue = value;
 				}
+				
+				var source = address.split('.');
+				for (var x = 0; x < source.length; x++) {
+					if (source[x] === "") continue;
+					if (workingValue[source[x]]) {
+						workingValue = workingValue[source[x]];
+					} else {
+						throw 'bad bind address';
+					}
+				}
+				store.tags[tagId].replacements[match] = workingValue;
 			};
 	
 			var attributes = store.tags[tagId].bindAttributes;
@@ -403,7 +393,32 @@ $iugo['defaultViewcontrollers'].push(function(property, value, scope, store) {
 	 * The path argument tracks the deep recursion and is used to fill relative addresses
 	 */
 	function process(value, node, path) {
-		// Update the replacements for a tag marked with an iugo_id
+		
+		// Is the node bound to the model?
+		var bindKey = node.getAttribute('data-path');
+		
+		if (bindKey) {
+			var namespaceEnd = bindKey.indexOf(':');
+			if (namespaceEnd > 0) {
+				value = model[bindKey.substr(0, namespaceEnd)];
+				bindKey = bindKey.substr(namespaceEnd + 1);
+			}
+		
+			try {
+				bindKey.split('.').forEach(function(addressSegment) {
+					if (addressSegment !== '') {
+						if (value[addressSegment]) {
+							value = value[addressSegment];
+						} else {
+							throw 'bad bind address';
+						}
+					}
+				});
+			} catch (exception) {
+				return;
+			}
+		}
+		
 		updateTagReplacements(value, node);
 		
 		// Recurse the DOM looking for substitutions
@@ -450,27 +465,7 @@ $iugo['defaultViewcontrollers'].push(function(property, value, scope, store) {
 					} else {
 						duplicateElement = elementView;
 					}
-					process(value[y], duplicateElement);
-				}
-			}
-		} else if (value instanceof Object) {
-			var bindKey = node.getAttribute('data-path');
-			if (bindKey != null && bindKey !== "") {
-				if (path == null) {
-					path = "";
-				} else {
-					path += ".";
-				}
-				var nextPath = bindKey.slice(path.length).split('.')[0];
-				
-				process(value[nextPath], node, path + nextPath);
-			} else {
-				for (var x = 0; x < node.children.length; x++) {
-					// it is possible to use a bindto-XXX class in a sub-element of an already bound element
-					// in that case we want to skip the DOM descent from the parent and wait until the child has its own binding iteration
-					if (! node.children[x].className.match("bindto-")) {
-						process(value, node.children[x], path);
-					}
+					process(value[y], duplicateElement, path);
 				}
 			}
 		} else {
@@ -478,7 +473,7 @@ $iugo['defaultViewcontrollers'].push(function(property, value, scope, store) {
 				for (var x = 0; x < node.children.length; x++) {
 					process(value, node.children[x], path);
 				}
-			} else {
+			} else if (! (value instanceof Object)) {
 				if (node.tagName == "INPUT") {
 					node.value = value;
 				} else {
@@ -488,24 +483,19 @@ $iugo['defaultViewcontrollers'].push(function(property, value, scope, store) {
 		}
 	}
 	
-	// Look for elements with a generated iugo id for processing
-	if (store.namespacedTagIndex[property]) {
-		var idList = store.namespacedTagIndex[property];
-		for (var x = 0; x < idList.length; x++) {
-			var elements = scope.querySelectorAll('[data-iugo_id="' + idList[x] + '"]');
-			
-			for (var y = 0; y < elements.length; y++ ) {
-				// Update the replacements for a tag marked with an iugo_id
-				updateTagReplacements(value, elements[y], property);
+	process(model, scope, '');
+	
+	/**
+	var elementsToProcess = scope.querySelectorAll('[data-path]');
+	for (var elementIndex = 0; elementIndex < elementsToProcess.length; elementIndex++) {
+		if (elementsToProcess[elementIndex].getAttribute('data-path').substring(0, property.length) == property) {
+			try {
+				process(value, elementsToProcess[elementIndex], property, true);
+			} catch (exception) {
+				console.log('ERROR: ' + exception);
 			}
 		}
-	}
-	
-	// Look for elements with a bindto-XXX class for processing
-	var boundNodes = scope.getElementsByClassName("bindto-" + property);
-	for (var x = 0; x < boundNodes.length; x++ ) {
-		process(value, boundNodes[x]);
-	}
+	}*/
 });
 
 // This initializer sets up event listening
@@ -604,7 +594,7 @@ window["Iugo"]["http"] = {
 					if (this.status >= 200 && this.status < 300) {
 						if (processor instanceof Function) {
 							resolve(processor(this.responseText));
-						} else if (this.getResponseHeader('content-type')) {
+						} else if (this.getResponseHeader('content-type') == "application/json") {
 							resolve(JSON.parse(this.responseText));	
 						} else {
 							resolve(this.responseText);
