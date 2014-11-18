@@ -20,7 +20,7 @@ $iugo.$internals.registerModelMember = function(obj, prop) {
         	return this.$[prop];
         },
         set: function(value) {
-        	if (value instanceof Promise) {
+        	if (window['Promise'] && value instanceof Promise) {
         		value.then(function(result) {
         			obj[prop] = result;
         		});

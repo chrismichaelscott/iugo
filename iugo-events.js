@@ -20,8 +20,19 @@ function getRealEvent(name) {
 	return 'on' + name;
 }
 
-function getPathFromSplit(eventPath, fork) {
+function nodeToPath(node) {
+	var path = [];
+	for (; node; node = node.parentNode) {
+		path.push(node);
+	}
+	
+	return path;
+}
+
+function getPathFromSplit(main, fork) {
 	var path = null;
+	
+	var eventPath = nodeToPath(main);
 	
 	for (; fork; fork = fork.parentNode) {
 		for (var eventPathIndex = 0; eventPathIndex < eventPath.length; eventPathIndex++) {
@@ -46,14 +57,12 @@ function passEventToController(eventName, mvvc, bubble) {
 	return function(event) {
 
 		var path = null;
-		if (eventName == 'hoverin') {
-			path = getPathFromSplit(event.path, event.fromElement);
-		} else if (eventName == 'hoverout') {
-			path = getPathFromSplit(event.path, event.toElement);
+		if (eventName == 'hoverin' || eventName == 'hoverout') {
+			path = getPathFromSplit(event.target, event.relatedTarget);
 		} else if (eventName == 'click') {
-			path = event.path;
+			path = (event.path) ? event.path : nodeToPath(event.target);
 		} else {
-			path = [event.path[0]];
+			path = event.target;
 		}
 		
 		if (path) for (var pathIndex = 0; pathIndex < path.length; pathIndex++) {
