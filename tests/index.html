@@ -86,13 +86,13 @@ window.onload = function() {
 		var postcode = document.getElementById('variableSyntaxTest').children[0];
 		ok(postcode, "Variables are substituted for nodes");
 		equal(postcode.tagName, "SPAN", "Variables are substituted for <span> tags");
-		equal(postcode.attributes[0].name, "data-path", "Variable span tags have a bind key");
+		equal(postcode.attributes[0].name, "data-bind", "Variable span tags have a bind key");
 		equal(postcode.attributes[0].value, "address.postcode", "The variable's bind key is set correctly");
 		equal(postcode.innerHTML, "N3 4DD", "The variable span tag is bound to a member");
 		
 		var workCity = document.getElementById('variableSyntaxNamespaceTest').children[0];
 		ok(workCity, "Namespaced variables are substituted for nodes");
-		equal(workCity.getAttribute('data-path'), 'work:address.city', "The namespaced variable's span is bound to a top-level model");
+		equal(workCity.getAttribute('data-bind'), 'work:address.city', "The namespaced variable's span is bound to a top-level model");
 		equal(workCity.innerHTML, "New York", "The namespaces variable span tag is bound to a member");
 		
 		var workTelephone = document.getElementById('variableSyntaxNamespaceTest').children[1];
@@ -166,7 +166,7 @@ window.onload = function() {
 		var alex = deepFriendsList[2].children;
 		ok(alex[0].innerHTML == "Alex" && alex[1].innerHTML == "Parkes", "The child nodes with bind keys have been mapped");
 		equal(alex.length, 3, "The variable syntax has been added to the child DOM tree");
-		equal(alex[2].attributes[0].name, "data-path", "A bind key has been added to the variable syntax span");
+		equal(alex[2].attributes[0].name, "data-bind", "A bind key has been added to the variable syntax span");
 		equal(alex[2].attributes[0].value, "age", "The bind key has been set successfully from the variable syntax");
 		equal(alex[2].innerHTML, "30", "The variable syntax span has been mapped correctly");
 		
@@ -260,68 +260,68 @@ window.onload = function() {
 </head>
 <body>
 	<div id="testView">
-		<span data-path="email" id="simpleMemberTest"></span>
-		<span data-path="contact.address.city" id="objectMemberTest"></span>
-		<div data-path="contact" id="objectFalseTest"></div>
-		<div data-path="contact">
-			<span data-path="telephone" id="objectMemberChildElementTest"></span>
+		<span data-bind="email" id="simpleMemberTest"></span>
+		<span data-bind="contact.address.city" id="objectMemberTest"></span>
+		<div data-bind="contact" id="objectFalseTest"></div>
+		<div data-bind="contact">
+			<span data-bind="telephone" id="objectMemberChildElementTest"></span>
 			<span id="variableSyntaxTest">My post code is {{address.postcode}}.</span>
 			<span id="variableSyntaxNamespaceTest">In {{work:address.city}} the Emergency Serives are on {{work:telephone}}</span>
 			<span id="variableSyntaxNamespaceOnlyTest">My name is {{name:}}</span>
 		</div>
 		<span id="variableSyntaxDollarTest">price ${{price}}.</span>
 		<span id="variableSyntaxMessyTest">${{price}} $ {{price}} } { {{price}}</span>
-		<ul data-path="websites" id="simpleListTest">
+		<ul data-bind="websites" id="simpleListTest">
 			<li data-each></li>
 		</ul>
-		<ul data-path="blogrole" id="dotVariableListTest">
+		<ul data-bind="blogrole" id="dotVariableListTest">
 			<li data-each>
 				<a href="http://{{.}}">Go to {{.}}</a>
 			</li>
 		</ul>
-		<ul data-path="friends" id="objectListTest">
-			<li data-each data-path="firstname"></li>
+		<ul data-bind="friends" id="objectListTest">
+			<li data-each data-bind="firstname"></li>
 		</ul>
-		<ul data-path="friends" id="objectDeepListTest">
+		<ul data-bind="friends" id="objectDeepListTest">
 			<li data-each>
-				<span data-path="firstname"></span>
-				<span data-path="surname"></span>
+				<span data-bind="firstname"></span>
+				<span data-bind="surname"></span>
 				is {{age}} years old
 			</li>
 		</ul>
-		<div data-path="interests">
-			<ul data-path="books" id="secondLevelListTest">
-				<li data-each data-path="author"></li>
+		<div data-bind="interests">
+			<ul data-bind="books" id="secondLevelListTest">
+				<li data-each data-bind="author"></li>
 			</ul>
 		</div>
-		<div data-path="interests">
-			<ul data-path="books" id="secondLevelDeepListTest">
+		<div data-bind="interests">
+			<ul data-bind="books" id="secondLevelDeepListTest">
 				<li data-each>
-					<span data-path="title"></span>
+					<span data-bind="title"></span>
 				</li>
 			</ul>
 		</div>
-		<div data-path="contact" data-country="{{address.country}}" id="attributeBindTest"></div>
+		<div data-bind="contact" data-country="{{address.country}}" id="attributeBindTest"></div>
 		<div data-country="{{contact:address.country}}" id="attributeBindNamespaceTest"></div>
 		<img src="images/{{work:name}}" id="attributeBindInjectTest"></img>
 		<img data-iugo_alias-src="images/{{work:name}}" id="attributeBindAliasTest"></img>
-		<div data-path="contact" data-location="{{address.country}} {{work:address.city}}" id="attributeMultiBindTest"></div>
-		<div data-path="contact" data-city="{{address.city}}" data-work="{{work:name}}" id="multiAttributeBindTest"></div>
-		<ul data-path="friends" id="attributeBindingInListTest">
+		<div data-bind="contact" data-location="{{address.country}} {{work:address.city}}" id="attributeMultiBindTest"></div>
+		<div data-bind="contact" data-city="{{address.city}}" data-work="{{work:name}}" id="multiAttributeBindTest"></div>
+		<ul data-bind="friends" id="attributeBindingInListTest">
 			<li data-each>
 				<a href="{{firstname}}">{{firstname}}</a>
 			</li>
 		</ul>
 		
-		<section data-path="response" id="http-test">
+		<section data-bind="response" id="http-test">
 			{{sport}}
 		</section>
 		
-		<section data-path="work" id="condition-test">
+		<section data-bind="work" id="condition-test">
 			<div data-if="failCondition">no</div>
 			<div data-if="successCondition">yes</div>
-			<div data-path="name" data-if="isItFactmint">yes</div>
-			<div data-path="telephone" data-if="isItFactmint">yes</div>
+			<div data-bind="name" data-if="isItFactmint">yes</div>
+			<div data-bind="telephone" data-if="isItFactmint">yes</div>
 		</section>
 	</div>
 	<h1 id="qunit-header">iugo MVVC test coverage</h1>  

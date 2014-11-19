@@ -25,7 +25,7 @@ $iugo['initializers'].push(function(mvvc) {
 		mvvc.scope.innerHTML = mvvc.scope.innerHTML.replace(innerHTMLRegex, function(m, before, address, after) {
 			var replacement = before + '<span ';
 			
-			replacement += 'data-path="' + address + '"></span>' + after;
+			replacement += 'data-bind="' + address + '"></span>' + after;
 			
 			return replacement;
 		});
@@ -76,7 +76,7 @@ $iugo['initializers'].push(function(mvvc) {
 	});
 });
 
-// This VC binds values to the DOM tree, when a "data-path" property is applied
+// This VC binds values to the DOM tree, when a "data-bind" property is applied
 $iugo['defaultViewcontrollers'].push(function(mvvc, change) {
 	var attributeRegex = /\{\{([^:}]+:)?([^}]+)\}\}/g;
 	
@@ -158,7 +158,7 @@ $iugo['defaultViewcontrollers'].push(function(mvvc, change) {
 	function process(value, node, path) {
 		
 		// Is the node bound to the model?
-		var bindKey = node.getAttribute('data-path');
+		var bindKey = node.getAttribute('data-bind');
 		
 		if (bindKey) {
 			var namespaceEnd = bindKey.indexOf(':');
@@ -260,9 +260,9 @@ $iugo['defaultViewcontrollers'].push(function(mvvc, change) {
 	process(mvvc.model, mvvc.scope, '');
 	
 	/**
-	var elementsToProcess = scope.querySelectorAll('[data-path]');
+	var elementsToProcess = scope.querySelectorAll('[data-bind]');
 	for (var elementIndex = 0; elementIndex < elementsToProcess.length; elementIndex++) {
-		if (elementsToProcess[elementIndex].getAttribute('data-path').substring(0, property.length) == property) {
+		if (elementsToProcess[elementIndex].getAttribute('data-bind').substring(0, property.length) == property) {
 			try {
 				process(value, elementsToProcess[elementIndex], property, true);
 			} catch (exception) {
