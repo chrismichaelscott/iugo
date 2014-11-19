@@ -53,7 +53,7 @@ $iugo.$internals.applySetters = function(mvvc, object, property, path) {
 		set: function(value) {
 			$iugo.$internals.setValue(value, mvvc, path, object, property);
 		
-			mvvc.updateView();
+			mvvc.updateView(path);
 		}
 	});
 };
@@ -180,20 +180,20 @@ $iugo.$internals.MVVC = function(model, scope) {
 	$iugo.$internals.applySetters(this, this, 'model', []);
 	this.model = model;
 	
-	this.updateView();
+	this.updateView([]);
 };
 
 
 $iugo.$internals.MVVC.prototype = {
     // Trigger the view to update
-    updateView: function() {
+    updateView: function(path) {
 		for (var x = 0; x < this.defaultViewcontrollers.length; x++) {
 			if (this.defaultViewcontrollers[x] instanceof Function) {
-				this.defaultViewcontrollers[x](this.model, this.scope, this.store);
+				this.defaultViewcontrollers[x](this, path);
 			}
 		}
 		if (typeof(this.viewcontroller) !== 'undefined' && this.viewcontroller instanceof Function) {
-			this.viewcontroller(this.model, this.scope, this.store);
+			this.viewcontroller(this, path);
 		}
     },
     
@@ -262,7 +262,7 @@ $iugo['initializers'].push(function(mvvc) {
 		mvvc.scope.innerHTML = mvvc.scope.innerHTML.replace(innerHTMLRegex, function(m, before, address, after) {
 			var replacement = before + '<span ';
 			
-			replacement += 'data-path="' + address + '"></span>' + after;
+			replacement += 'data-bind="' + address + '"></span>' + after;
 			
 			return replacement;
 		});
@@ -313,21 +313,21 @@ $iugo['initializers'].push(function(mvvc) {
 	});
 });
 
-// This VC binds values to the DOM tree, when a "data-path" property is applied
-$iugo['defaultViewcontrollers'].push(function(model, scope, store, change) {
+// This VC binds values to the DOM tree, when a "data-bind" property is applied
+$iugo['defaultViewcontrollers'].push(function(mvvc, change) {
 	var attributeRegex = /\{\{([^:}]+:)?([^}]+)\}\}/g;
 	
 	function compileTagAttributes(tagId) {
 		var tag = document.querySelector('[data-iugo_id="' + tagId + '"]');
 		
-		var attributes = store.tags[tagId].bindAttributes;
+		var attributes = mvvc.store.tags[tagId].bindAttributes;
 		
 		for (var x = 0; x < attributes.length; x++) {
-			var template = store.tags[tagId].attributeTemplates[attributes[x]];
+			var template = mvvc.store.tags[tagId].attributeTemplates[attributes[x]];
 			
 			var compiledAttribute = template.replace(attributeRegex, function(match) {
-				return (store.tags[tagId].replacements[match]) ?
-					store.tags[tagId].replacements[match] :
+				return (mvvc.store.tags[tagId].replacements[match]) ?
+					mvvc.store.tags[tagId].replacements[match] :
 					"";
 			});
 			
@@ -342,7 +342,7 @@ $iugo['defaultViewcontrollers'].push(function(model, scope, store, change) {
 			var updateTagIndex = function(match, namespace, address) {
 				var workingValue = null;
 				if (namespace) {
-					workingValue = model[namespace.substr(0, namespace.length - 1)];
+					workingValue = mvvc.model[namespace.substr(0, namespace.length - 1)];
 				} else {
 					workingValue = value;
 				}
@@ -356,15 +356,15 @@ $iugo['defaultViewcontrollers'].push(function(model, scope, store, change) {
 						throw 'bad bind address';
 					}
 				}
-				store.tags[tagId].replacements[match] = workingValue;
+				mvvc.store.tags[tagId].replacements[match] = workingValue;
 			};
 	
-			var attributes = store.tags[tagId].bindAttributes;
+			var attributes = mvvc.store.tags[tagId].bindAttributes;
 			for (var x = 0; x < attributes.length; x++) {
 				var attribute = attributes[x];
 				
 				// Add the variables to the store with their latest values
-				var template = store.tags[tagId].attributeTemplates[attribute];
+				var template = mvvc.store.tags[tagId].attributeTemplates[attribute];
 				template.replace(attributeRegex, updateTagIndex);
 			}
 			
@@ -374,10 +374,10 @@ $iugo['defaultViewcontrollers'].push(function(model, scope, store, change) {
 	
 	function cloneTagIndex(node) {
 		var oldId = node.getAttribute("data-iugo_id");
-		var newId = store.idCounter++;
+		var newId = mvvc.store.idCounter++;
 		
-		var oldIndex = store.tags[oldId];
-		store.tags[newId] = {
+		var oldIndex = mvvc.store.tags[oldId];
+		mvvc.store.tags[newId] = {
 			bindAttributes: oldIndex.bindAttributes,
 			attributeTemplates: oldIndex.attributeTemplates,
 			replacements: {}
@@ -395,12 +395,12 @@ $iugo['defaultViewcontrollers'].push(function(model, scope, store, change) {
 	function process(value, node, path) {
 		
 		// Is the node bound to the model?
-		var bindKey = node.getAttribute('data-path');
+		var bindKey = node.getAttribute('data-bind');
 		
 		if (bindKey) {
 			var namespaceEnd = bindKey.indexOf(':');
 			if (namespaceEnd > 0) {
-				value = model[bindKey.substr(0, namespaceEnd)];
+				value = mvvc.model[bindKey.substr(0, namespaceEnd)];
 				bindKey = bindKey.substr(namespaceEnd + 1);
 			}
 		
@@ -416,6 +416,28 @@ $iugo['defaultViewcontrollers'].push(function(model, scope, store, change) {
 				});
 			} catch (exception) {
 				return;
+			}
+		}
+		
+		var condition = node.getAttribute('data-if');
+		if (condition) {
+			var test = mvvc.controller[condition];
+			if (test && test instanceof Function) {
+				if (! test.call(node, value, mvvc)) {
+					if (! node.hasAttribute('data-iugo_olddisplay')) {
+						node.setAttribute('data-iugo_olddisplay', node.style.display);
+					}
+					
+					node.style.display = 'none';
+					return;
+				} else {
+					var oldDisplay = node.getAttribute('data-iugo_olddisplay');
+					if (oldDisplay) {
+						node.style.display = oldDisplay;
+					} else {
+						node.style.display = '';
+					}
+				}
 			}
 		}
 		
@@ -483,12 +505,12 @@ $iugo['defaultViewcontrollers'].push(function(model, scope, store, change) {
 		}
 	}
 	
-	process(model, scope, '');
+	process(mvvc.model, mvvc.scope, '');
 	
 	/**
-	var elementsToProcess = scope.querySelectorAll('[data-path]');
+	var elementsToProcess = scope.querySelectorAll('[data-bind]');
 	for (var elementIndex = 0; elementIndex < elementsToProcess.length; elementIndex++) {
-		if (elementsToProcess[elementIndex].getAttribute('data-path').substring(0, property.length) == property) {
+		if (elementsToProcess[elementIndex].getAttribute('data-bind').substring(0, property.length) == property) {
 			try {
 				process(value, elementsToProcess[elementIndex], property, true);
 			} catch (exception) {
@@ -574,7 +596,7 @@ function passEventToController(eventName, mvvc, bubble) {
 			
 			var handler = target.getAttribute('data-' + eventName);
 			if (handler && mvvc.controller[handler] instanceof Function) {
-				mvvc.controller[handler].call(target, mvvc, event);
+				mvvc.controller[handler].call(target, event, mvvc);
 				return false;
 			}
 		}
