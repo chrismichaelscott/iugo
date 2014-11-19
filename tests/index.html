@@ -37,6 +37,7 @@ window.onload = function() {
 				city: "New York"
 			}
 		},
+		criminalRecord: true,
 		websites: ["factmint.com", "chrisscott.org", "iugojs.com"],
 		blogrole: ["lea.verou.me", "chrisscott.org", "css-tricks.com"],
 		price: 32,
@@ -59,8 +60,11 @@ window.onload = function() {
 		successCondition: function() {
 			return true;
 		},
-		isItFactmint: function(value) {
-			return (value == 'FactMint');
+		isConvict: function(value) {
+			return value;
+		},
+		isNotConvict: function(value) {
+			return ! value;
 		}
 	}
 	
@@ -231,13 +235,19 @@ window.onload = function() {
 		
 	});
 	
-	test('Conditional DOM', function() {
-		var nodes = document.getElementById('condition-test').children;
-		equal(nodes[0].getAttribute('style'), 'display: none', 'the test was false');
-		notEqual(nodes[1].getAttribute('style'), 'display: none', 'the test was true');
-
-		notEqual(nodes[2].style.display, 'none', 'the test was true, as the value was "FactMint"');
-		equal(nodes[3].style.display, 'none', 'the test was false, as the value was not "FactMint"');
+	asyncTest('Conditional DOM', function() {
+		expect(4);
+		
+		setTimeout(function() {
+			var nodes = document.getElementById('condition-test').children;
+			ok(nodes[0].hasAttribute('data-iugo_olddisplay'), 'the test was false');
+			ok(! nodes[1].hasAttribute('data-iugo_olddisplay'), 'the test was true');
+	
+			notEqual(nodes[2].style.display, 'none', 'the test was true, as the value was "FactMint"');
+			equal(nodes[3].style.display, 'none', 'the test was false, as the value was not "FactMint"');
+			
+			start();
+		}, 500);
 	});
 	
 	asyncTest('HTTP Promise resolution', function() {
@@ -317,11 +327,11 @@ window.onload = function() {
 			{{sport}}
 		</section>
 		
-		<section data-bind="work" id="condition-test">
+		<section data-bind="criminalRecord" id="condition-test">
 			<div data-if="failCondition">no</div>
 			<div data-if="successCondition">yes</div>
-			<div data-bind="name" data-if="isItFactmint">yes</div>
-			<div data-bind="telephone" data-if="isItFactmint">yes</div>
+			<div data-if="isConvict">yes</div>
+			<div data-if="isNotConvict">yes</div>
 		</section>
 	</div>
 	<h1 id="qunit-header">iugo MVVC test coverage</h1>  

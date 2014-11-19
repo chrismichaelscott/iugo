@@ -187,8 +187,19 @@ $iugo['defaultViewcontrollers'].push(function(mvvc, change) {
 			var test = mvvc.controller[condition];
 			if (test && test instanceof Function) {
 				if (! test.call(node, value, mvvc)) {
+					if (! node.hasAttribute('data-iugo_olddisplay')) {
+						node.setAttribute('data-iugo_olddisplay', node.style.display);
+					}
+					
 					node.style.display = 'none';
 					return;
+				} else {
+					var oldDisplay = node.getAttribute('data-iugo_olddisplay');
+					if (oldDisplay) {
+						node.style.display = oldDisplay;
+					} else {
+						node.style.display = '';
+					}
 				}
 			}
 		}
