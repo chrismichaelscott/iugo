@@ -1,0 +1,102 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Duckweed by chrismichaelscott</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Duckweed</h1>
+        <p>A super-lightweight Web framework</p>
+
+        <p class="view"><a href="https://github.com/chrismichaelscott/iugo">View the Project on GitHub <small>chrismichaelscott/iugo</small></a></p>
+
+
+        <ul>
+          <li><a href="https://github.com/chrismichaelscott/iugo/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/chrismichaelscott/iugo/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/chrismichaelscott/iugo">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>
+<a id="iugojs" class="anchor" href="#iugojs" aria-hidden="true"><span class="octicon octicon-link"></span></a>iugo.js</h1>
+
+<p>iugo is an extremely lightweight (2KB, minified and gzipped) Javascript MVVC (Model-View-View Controller) framework, used to bind models to the DOM dynamically.</p>
+
+<h3>
+<a id="why-is-iugo-needed" class="anchor" href="#why-is-iugo-needed" aria-hidden="true"><span class="octicon octicon-link"></span></a>Why is iugo needed?</h3>
+
+<p>There are a number of Javascript MVVC frameworks out there, all with their own pros and cons. iugo focuses on binding one or more data models to a DOM tree. The framework is lightweight and only covers this core functionality - but can be extended in many ways.</p>
+
+<p>In particular, iugo aims to septerate the view (the HTML) from data used to populate it, by allowing HTML developers to treat their markup as a template; much like popular server-side templating languages like Apache Velocity, etc. The rational behind this approach is very similar to the goal of seperating style from HTML, helping one maintain semantic and readable HTML.</p>
+
+<p>One common situation front-end developers might find themselves in is making a call to a webservice, iterating over a JSON response and dynamically adding HTML to the document. With that approach the code may look like this:</p>
+
+<p>HTML:</p>
+
+<pre><code>&lt;body&gt;
+    &lt;ul class="results"&gt;&lt;/ul&gt;
+&lt;/body&gt;
+</code></pre>
+
+<p>Javascript:</p>
+
+<pre><code>var list = $('ul.results');
+$.get('http://example.com/endpoint', function(results) {
+    for (var x in results) {
+        $resultNode = $('&lt;li&gt;' + results[x] + '&lt;/li&gt;');
+        $resultNode.appendTo(list);
+    }
+});
+</code></pre>
+
+<p>Looking at this code it is difficult to visualize the DOM and anyone inspecting the DOM would struggle to guess which file had created the HTML. In contrast, the same program written using iugo would look like this:</p>
+
+<p>HTML:</p>
+
+<pre><code>&lt;body&gt;
+    &lt;ul class="bindto-results"&gt;
+        &lt;li data-bind_each&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+&lt;/body&gt;
+</code></pre>
+
+<p>Javascript:</p>
+
+<pre><code>var model = new iugo({results: []});
+$.get('http://example.com/endpoint', function(results) {
+    model.results = results;
+});
+</code></pre>
+
+<p>Now the HTML is clear and one can see what it will look like before the Javascript has executed and the Javascript itself does not need to contain ugly HTML clips.</p>
+
+<h3>
+<a id="installation" class="anchor" href="#installation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Installation</h3>
+
+<p>The simplest way to get started is to download the iugo.min.js script and include it in your HTML page. If you are using different view-controller plugins from the standard DOM binding then you need to include iugo-core.min.js and any plugins you want to use. See the wiki for full details.</p>
+
+<h3>
+<a id="plugins" class="anchor" href="#plugins" aria-hidden="true"><span class="octicon octicon-link"></span></a>Plugins</h3>
+
+<p>At its core, iugo is a bubbling event mechanism for changes made to Javascript objects - the model. When the model is changes iugo call each of a collection of view-controller methods from a stack. The default package only contains a plugin which binds the model to a DOM tree. Other plugins can be developed and included to trigger other actions when a model is changed.</p>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/chrismichaelscott">chrismichaelscott</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
+</html>
