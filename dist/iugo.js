@@ -392,12 +392,13 @@ $iugo['defaultViewcontrollers'].push(function(mvvc, change) {
 	 * 
 	 * The path argument tracks the deep recursion and is used to fill relative addresses
 	 */
-	function process(value, node, path) {
+	function process(value, node) {
 		
 		// Is the node bound to the model?
 		var bindKey = node.getAttribute('data-bind');
 		
 		if (bindKey) {
+		
 			var namespaceEnd = bindKey.indexOf(':');
 			if (namespaceEnd > 0) {
 				value = mvvc.model[bindKey.substr(0, namespaceEnd)];
@@ -405,6 +406,8 @@ $iugo['defaultViewcontrollers'].push(function(mvvc, change) {
 			}
 		
 			try {
+				var entryPoint = mvvc.store.domEntrypoints;
+				
 				bindKey.split('.').forEach(function(addressSegment) {
 					if (addressSegment !== '') {
 						if (value[addressSegment]) {
@@ -487,13 +490,13 @@ $iugo['defaultViewcontrollers'].push(function(mvvc, change) {
 					} else {
 						duplicateElement = elementView;
 					}
-					process(value[y], duplicateElement, path);
+					process(value[y], duplicateElement);
 				}
 			}
 		} else {
 			if (node.children.length > 0) {
 				for (var x = 0; x < node.children.length; x++) {
-					process(value, node.children[x], path);
+					process(value, node.children[x]);
 				}
 			} else if (! (value instanceof Object)) {
 				if (node.tagName == "INPUT") {
@@ -505,19 +508,9 @@ $iugo['defaultViewcontrollers'].push(function(mvvc, change) {
 		}
 	}
 	
-	process(mvvc.model, mvvc.scope, '');
+	console.log(change);
 	
-	/**
-	var elementsToProcess = scope.querySelectorAll('[data-bind]');
-	for (var elementIndex = 0; elementIndex < elementsToProcess.length; elementIndex++) {
-		if (elementsToProcess[elementIndex].getAttribute('data-bind').substring(0, property.length) == property) {
-			try {
-				process(value, elementsToProcess[elementIndex], property, true);
-			} catch (exception) {
-				console.log('ERROR: ' + exception);
-			}
-		}
-	}*/
+	process(mvvc.model, mvvc.scope);
 });
 
 // This initializer sets up event listening
